@@ -32,7 +32,7 @@ const GoogleOneTap = () => {
       console.error('Error getting session', error);
     }
     if (data.session) {
-      router.push('/notes');
+      // user is already logged in; do not show One Tap or redirect
       return;
     }
 
