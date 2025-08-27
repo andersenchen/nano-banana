@@ -32,7 +32,7 @@ const GoogleOneTap = () => {
       console.error('Error getting session', error);
     }
     if (data.session) {
-      router.push('/');
+      router.push('/notes');
       return;
     }
 
@@ -47,8 +47,8 @@ const GoogleOneTap = () => {
           });
 
           if (error) throw error;
-          // redirect to protected page
-          router.push('/');
+          // redirect to notes after successful login
+          router.push('/notes');
         } catch (error) {
           console.error('Error logging in with Google One Tap', error);
         }
