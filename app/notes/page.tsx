@@ -1,11 +1,11 @@
+import Link from "next/link";
+import { AuthButton } from "@/components/auth-button";
 import { DeployButton } from "@/components/deploy-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
-import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { hasEnvVars } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
+import { hasEnvVars } from "@/lib/utils";
 
 export default async function Page() {
   const supabase = await createClient();
