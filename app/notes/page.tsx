@@ -1,11 +1,23 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { AuthButton } from "@/components/auth-button";
 import { DeployButton } from "@/components/deploy-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
+
+async function addNote(formData: FormData) {
+  "use server";
+  const title = (formData.get("title") as string | null)?.trim();
+  if (!title) return;
+  const supabase = await createClient();
+  await supabase.from("notes").insert({ title });
+  revalidatePath("/notes");
+}
 
 export default async function Page() {
   const supabase = await createClient();
@@ -35,6 +47,10 @@ export default async function Page() {
           <div className="flex items-center justify-between">
             <h1 className="font-medium text-xl">Notes</h1>
           </div>
+          <form action={addNote} className="flex items-center gap-2 max-w-xl">
+            <Input name="title" placeholder="New note title" />
+            <Button type="submit">Add</Button>
+          </form>
 
           {notes && notes.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
