@@ -29,7 +29,6 @@ const GoogleOneTap = () => {
     // check if there's already an existing session before initializing the one-tap UI
     const { data, error } = await supabase.auth.getSession()
     if (error) {
-      // eslint-disable-next-line no-console
       console.error('Error getting session', error)
     }
     if (data.session) {
@@ -37,13 +36,11 @@ const GoogleOneTap = () => {
       return
     }
 
-    /* global google */
     google.accounts.id.initialize({
-      // @ts-expect-error: NEXT_PUBLIC_GOOGLE_CLIENT_ID is injected at build time
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
       callback: async (response: CredentialResponse) => {
         try {
-          const { data: _sessionData, error } = await supabase.auth.signInWithIdToken({
+          const { error } = await supabase.auth.signInWithIdToken({
             provider: 'google',
             token: response.credential,
             nonce,
@@ -53,7 +50,6 @@ const GoogleOneTap = () => {
           // redirect to protected page
           router.push('/')
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.error('Error logging in with Google One Tap', error)
         }
       },
@@ -64,7 +60,7 @@ const GoogleOneTap = () => {
     google.accounts.id.prompt() // Display the One Tap UI
   }
 
-  return <Script onReady={initializeGoogleOneTap} src="https://accounts.google.com/gsi/client" />
+  return <Script onReady={() => { void initializeGoogleOneTap() }} src="https://accounts.google.com/gsi/client" />
 }
 
 export default GoogleOneTap
