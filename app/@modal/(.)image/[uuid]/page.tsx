@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, MessageCircle, Shuffle, Share, Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,7 @@ interface Comment {
 export default function ImageModal() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageName, setImageName] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,6 @@ export default function ImageModal() {
   const [likeCount, setLikeCount] = useState(1234);
   const [allImages, setAllImages] = useState<Array<{id: string, name: string}>>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isOpen, setIsOpen] = useState(true);
   const [comments, setComments] = useState<Comment[]>([
     {
       id: "1",
@@ -90,15 +90,6 @@ export default function ImageModal() {
     fetchImages();
   }, [params.uuid, supabase.storage]);
 
-  // Reset modal open state when navigating to any image
-  useEffect(() => {
-    setIsOpen(true);
-  }, [params.uuid]);
-
-  // Force modal to be open on component mount
-  useEffect(() => {
-    setIsOpen(true);
-  }, []);
 
 
   // Keyboard navigation
@@ -158,7 +149,6 @@ export default function ImageModal() {
   };
 
   const handleClose = () => {
-    setIsOpen(false);
     router.push('/');
   };
 
@@ -183,9 +173,17 @@ export default function ImageModal() {
     }
   };
 
+  // Check if we should show the modal based on current path
+  const shouldShowModal = pathname.includes('/image/');
+
+  // If not on an image route, don't render the modal
+  if (!shouldShowModal) {
+    return null;
+  }
+
   if (loading) {
     return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
+      <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
         <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 bg-black">
           <DialogTitle className="sr-only">Loading Image</DialogTitle>
           <DialogDescription className="sr-only">Image is loading, please wait</DialogDescription>
@@ -198,7 +196,7 @@ export default function ImageModal() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 bg-black overflow-hidden">
         <DialogTitle className="sr-only">{imageName || "Image"}</DialogTitle>
         <DialogDescription className="sr-only">Image detail view with comments and interactions</DialogDescription>
