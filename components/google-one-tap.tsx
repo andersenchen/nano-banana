@@ -19,50 +19,72 @@ const generateNonce = async (): Promise<string[]> => {
   return [nonce, hashedNonce];
 };
 
-const GoogleOneTap = () => {
+const GoogleOneTap = ({ showButton = false }: { showButton?: boolean }) => {
   const supabase = createClient();
   const router = useRouter();
 
-  const initializeGoogleOneTap = async () => {
+  const initializeGoogle = async () => {
     const [nonce, hashedNonce] = await generateNonce();
 
-    // check if there's already an existing session before initializing the one-tap UI
+    // check if there's already an existing session before initializing
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       console.error('Error getting session', error);
     }
     if (data.session) {
-      // user is already logged in; do not show One Tap or redirect
+      // user is already logged in; do not show One Tap or button
       return;
     }
 
+    const handleGoogleSignIn = async (response: CredentialResponse) => {
+      try {
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: response.credential,
+          nonce,
+        });
+
+        if (error) throw error;
+        // redirect to notes after successful login
+        router.push('/notes');
+      } catch (error) {
+        console.error('Error logging in with Google', error);
+      }
+    };
+
     google.accounts.id.initialize({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
-      callback: async (response: CredentialResponse) => {
-        try {
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: response.credential,
-            nonce,
-          });
-
-          if (error) throw error;
-          // redirect to notes after successful login
-          router.push('/notes');
-        } catch (error) {
-          console.error('Error logging in with Google One Tap', error);
-        }
-      },
+      callback: handleGoogleSignIn,
       nonce: hashedNonce,
       // with chrome's removal of third-party cookies, we need to use FedCM instead
       use_fedcm_for_prompt: true,
-      auto_select: true,
+      auto_select: !showButton, // only auto-select for one-tap, not button
       cancel_on_tap_outside: false,
     });
-    google.accounts.id.prompt(); // Display the One Tap UI
+
+    if (showButton) {
+      // Render the Sign-In button
+      google.accounts.id.renderButton(
+        document.getElementById('google-signin-button')!,
+        {
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          width: '250',
+        }
+      );
+    } else {
+      // Show One Tap UI
+      google.accounts.id.prompt();
+    }
   };
 
-  return <Script onReady={() => { void initializeGoogleOneTap(); }} src="https://accounts.google.com/gsi/client" />;
+  return (
+    <>
+      <Script onReady={() => { void initializeGoogle(); }} src="https://accounts.google.com/gsi/client" />
+      {showButton && <div id="google-signin-button"></div>}
+    </>
+  );
 };
 
 export default GoogleOneTap;
