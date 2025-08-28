@@ -1,23 +1,23 @@
 "use client";
 
 import { useParams, useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
+import LoadingSpinner from "@/components/loading-spinner";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
+import { useImageFetch } from "@/hooks/use-image-fetch";
+import { useImageGallery } from "@/hooks/use-image-gallery";
 
 export default function ImageModal() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [imageName, setImageName] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [allImages, setAllImages] = useState<Array<{id: string, name: string}>>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const { imageUrl, imageName, loading } = useImageFetch(params.uuid);
+  const { allImages, currentImageIndex, handlePrevious, handleNext } = useImageGallery(params.uuid);
   
   const {
     liked,
@@ -33,97 +33,21 @@ export default function ImageModal() {
     handleShare,
   } = useImageInteractions();
 
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function fetchImages() {
-      if (!params.uuid) return;
-      
-      try {
-        const { data, error } = await supabase.storage
-          .from("public-images")
-          .list("", { 
-            limit: 100,
-            sortBy: { column: "created_at", order: "desc" }
-          });
-
-        if (error) throw error;
-
-        const imageFiles = data?.filter(file => 
-          /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-        ) || [];
-
-        const imageData = imageFiles.map(file => ({
-          id: file.id,
-          name: file.name
-        }));
-        
-        setAllImages(imageData);
-        
-        const currentIndex = imageData.findIndex(img => img.id === params.uuid);
-        setCurrentImageIndex(currentIndex !== -1 ? currentIndex : 0);
-        
-        const currentImage = imageData[currentIndex !== -1 ? currentIndex : 0];
-        if (currentImage) {
-          const { data: urlData } = supabase.storage
-            .from("public-images")
-            .getPublicUrl(currentImage.name);
-          
-          setImageUrl(urlData.publicUrl);
-          setImageName(currentImage.name);
-        }
-      } catch (error) {
-        console.error("Error fetching images:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchImages();
-  }, [params.uuid, supabase.storage]);
-
-
-
-  // Keyboard navigation
+  // Keyboard navigation for Escape key (arrow keys handled in useImageGallery)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        handlePrevious();
-      } else if (e.key === 'ArrowRight') {
-        handleNext();
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         handleClose();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentImageIndex, allImages.length]);
+  }, []);
 
 
   const handleClose = () => {
     router.push('/');
-  };
-
-  const navigateToImage = (index: number) => {
-    if (index >= 0 && index < allImages.length) {
-      const targetImage = allImages[index];
-      router.push(`/image/${targetImage.id}`, { scroll: false });
-    }
-  };
-
-  const handlePrevious = () => {
-    const prevIndex = currentImageIndex - 1;
-    if (prevIndex >= 0) {
-      navigateToImage(prevIndex);
-    }
-  };
-
-  const handleNext = () => {
-    const nextIndex = currentImageIndex + 1;
-    if (nextIndex < allImages.length) {
-      navigateToImage(nextIndex);
-    }
   };
 
   // Check if we should show the modal based on current path
@@ -141,7 +65,7 @@ export default function ImageModal() {
           <DialogTitle className="sr-only">Loading Image</DialogTitle>
           <DialogDescription className="sr-only">Image is loading, please wait</DialogDescription>
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+            <LoadingSpinner variant="light" />
           </div>
         </DialogContent>
       </Dialog>

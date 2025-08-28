@@ -1,19 +1,18 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { ArrowLeft, Share } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
+import LoadingSpinner from "@/components/loading-spinner";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
+import { useImageFetch } from "@/hooks/use-image-fetch";
 
 export default function ImageDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [imageName, setImageName] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  
+  const { imageUrl, imageName, loading } = useImageFetch(params.uuid);
   
   const {
     liked,
@@ -29,52 +28,11 @@ export default function ImageDetailPage() {
     handleShare,
   } = useImageInteractions();
 
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function fetchImage() {
-      if (!params.uuid) return;
-      
-      try {
-        const { data, error } = await supabase.storage
-          .from("public-images")
-          .list("", { 
-            limit: 100,
-            sortBy: { column: "created_at", order: "desc" }
-          });
-
-        if (error) throw error;
-
-        const imageFiles = data?.filter(file => 
-          /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-        ) || [];
-
-        // Find the image by UUID instead of index
-        const imageFile = imageFiles.find(file => file.id === params.uuid);
-
-        if (imageFile) {
-          const { data: urlData } = supabase.storage
-            .from("public-images")
-            .getPublicUrl(imageFile.name);
-          
-          setImageUrl(urlData.publicUrl);
-          setImageName(imageFile.name);
-        }
-      } catch (error) {
-        console.error("Error fetching image:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchImage();
-  }, [params.uuid, supabase.storage]);
-
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-foreground"></div>
+        <LoadingSpinner variant="dark" />
       </div>
     );
   }
