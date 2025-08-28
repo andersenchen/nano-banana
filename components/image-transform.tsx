@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Wand2, Send } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -62,7 +62,7 @@ export default function ImageTransform({ className = "" }: ImageTransformProps) 
               disabled={isTransforming}
               className="w-full text-left p-3 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              "{example}"
+&ldquo;{example}&rdquo;
             </button>
           ))}
         </div>
@@ -77,7 +77,8 @@ export default function ImageTransform({ className = "" }: ImageTransformProps) 
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              handleTransform(e as any);
+              const formEvent = { ...e, preventDefault: () => e.preventDefault() } as React.FormEvent;
+              handleTransform(formEvent);
             }
           }}
           placeholder="Describe your transformation... (e.g., 'Make this image look like a Van Gogh painting with swirling brushstrokes')"
