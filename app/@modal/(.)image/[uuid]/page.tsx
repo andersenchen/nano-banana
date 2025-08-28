@@ -5,15 +5,9 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import ImageActionBar from "@/components/image-action-bar";
-import ImageComments from "@/components/image-comments";
-
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  createdAt: string;
-}
+import ImageDisplay from "@/components/image-display";
+import ImageSidebar from "@/components/image-sidebar";
+import { useImageInteractions } from "@/hooks/use-image-interactions";
 
 export default function ImageModal() {
   const params = useParams();
@@ -22,26 +16,22 @@ export default function ImageModal() {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageName, setImageName] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(1234);
   const [allImages, setAllImages] = useState<Array<{id: string, name: string}>>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: "1",
-      text: "Amazing work! Love the composition 🔥",
-      author: "user1",
-      createdAt: "2h ago"
-    },
-    {
-      id: "2", 
-      text: "This is so inspiring! How did you create this?",
-      author: "creator_jane",
-      createdAt: "5h ago"
-    }
-  ]);
-  const [newComment, setNewComment] = useState("");
+  
+  const {
+    liked,
+    bookmarked,
+    likeCount,
+    comments,
+    newComment,
+    setNewComment,
+    handleLike,
+    handleBookmark,
+    handleComment,
+    handleBanana,
+    handleShare,
+  } = useImageInteractions();
 
   const supabase = createClient();
 
@@ -110,45 +100,6 @@ export default function ImageModal() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentImageIndex, allImages.length]);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
-  };
-
-  const handleBookmark = () => {
-    setBookmarked(!bookmarked);
-  };
-
-  const handleComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    const comment: Comment = {
-      id: Date.now().toString(),
-      text: newComment,
-      author: "You",
-      createdAt: "now"
-    };
-
-    setComments(prev => [comment, ...prev]);
-    setNewComment("");
-  };
-
-  const handleBanana = () => {
-    alert("Banana feature coming soon! 🍌");
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: "Check out this image",
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
-  };
 
   const handleClose = () => {
     router.push('/');
@@ -199,7 +150,7 @@ export default function ImageModal() {
 
   return (
     <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 bg-black overflow-hidden">
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[90vh] p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col">
         <DialogTitle className="sr-only">{imageName || "Image"}</DialogTitle>
         <DialogDescription className="sr-only">Image detail view with comments and interactions</DialogDescription>
 
@@ -222,46 +173,31 @@ export default function ImageModal() {
           </button>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 min-h-0 flex-1">
           {/* Image Section */}
-          <div className="lg:col-span-2 bg-black flex items-center justify-center relative">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={imageName || "Detail view"}
-                className="max-w-full max-h-full object-contain"
-              />
-            ) : (
-              <div className="text-white/70">Image not found</div>
-            )}
+          <div className="lg:col-span-2 min-h-0">
+            <ImageDisplay 
+              imageUrl={imageUrl} 
+              imageName={imageName} 
+            />
           </div>
 
           {/* Sidebar - Comments Section */}
-          <div className="lg:col-span-1 bg-white dark:bg-background flex flex-col border-l border-border max-h-full">
-            {/* Header */}
-            <div className="p-4 border-b border-border">
-              <h2 className="font-semibold truncate">{imageName || "Image"}</h2>
-            </div>
-
-            <ImageActionBar
-              liked={liked}
-              bookmarked={bookmarked}
-              likeCount={likeCount}
-              commentCount={comments.length}
-              showShare={true}
-              onLike={handleLike}
-              onBookmark={handleBookmark}
-              onBanana={handleBanana}
-              onShare={handleShare}
-            />
-
-            <ImageComments
-              comments={comments}
-              newComment={newComment}
-              onCommentChange={setNewComment}
-              onCommentSubmit={handleComment}
-            />
-          </div>
+          <ImageSidebar
+            imageName={imageName}
+            liked={liked}
+            bookmarked={bookmarked}
+            likeCount={likeCount}
+            comments={comments}
+            newComment={newComment}
+            showShare={true}
+            onLike={handleLike}
+            onBookmark={handleBookmark}
+            onBanana={handleBanana}
+            onShare={handleShare}
+            onCommentChange={setNewComment}
+            onCommentSubmit={handleComment}
+          />
         </div>
       </DialogContent>
     </Dialog>

@@ -4,15 +4,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Share } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import ImageActionBar from "@/components/image-action-bar";
-import ImageComments from "@/components/image-comments";
-
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  createdAt: string;
-}
+import ImageDisplay from "@/components/image-display";
+import ImageSidebar from "@/components/image-sidebar";
+import { useImageInteractions } from "@/hooks/use-image-interactions";
 
 export default function ImageDetailPage() {
   const params = useParams();
@@ -20,24 +14,20 @@ export default function ImageDetailPage() {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageName, setImageName] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(1234);
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: "1",
-      text: "Amazing work! Love the composition 🔥",
-      author: "user1",
-      createdAt: "2h ago"
-    },
-    {
-      id: "2", 
-      text: "This is so inspiring! How did you create this?",
-      author: "creator_jane",
-      createdAt: "5h ago"
-    }
-  ]);
-  const [newComment, setNewComment] = useState("");
+  
+  const {
+    liked,
+    bookmarked,
+    likeCount,
+    comments,
+    newComment,
+    setNewComment,
+    handleLike,
+    handleBookmark,
+    handleComment,
+    handleBanana,
+    handleShare,
+  } = useImageInteractions();
 
   const supabase = createClient();
 
@@ -80,46 +70,6 @@ export default function ImageDetailPage() {
     fetchImage();
   }, [params.uuid, supabase.storage]);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
-  };
-
-  const handleBookmark = () => {
-    setBookmarked(!bookmarked);
-  };
-
-  const handleComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    const comment: Comment = {
-      id: Date.now().toString(),
-      text: newComment,
-      author: "You",
-      createdAt: "now"
-    };
-
-    setComments(prev => [comment, ...prev]);
-    setNewComment("");
-  };
-
-  const handleBanana = () => {
-    // Placeholder for banana functionality
-    alert("Banana feature coming soon! 🍌");
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: "Check out this image",
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
-  };
 
   if (loading) {
     return (
@@ -152,38 +102,30 @@ export default function ImageDetailPage() {
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8 min-h-[calc(100vh-73px)]">
         {/* Image Section */}
-        <div className="lg:col-span-2 bg-black flex items-center justify-center">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={imageName || "Detail view"}
-              className="max-w-full max-h-[80vh] object-contain"
-            />
-          ) : (
-            <div className="text-muted-foreground">Image not found</div>
-          )}
+        <div className="lg:col-span-2 h-full">
+          <ImageDisplay 
+            imageUrl={imageUrl} 
+            imageName={imageName}
+            className="w-full h-full max-h-[80vh] object-contain"
+          />
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-1 flex flex-col border-l border-border lg:border-l-0">
-          <ImageActionBar
-            liked={liked}
-            bookmarked={bookmarked}
-            likeCount={likeCount}
-            commentCount={comments.length}
-            showShare={false}
-            onLike={handleLike}
-            onBookmark={handleBookmark}
-            onBanana={handleBanana}
-          />
-
-          <ImageComments
-            comments={comments}
-            newComment={newComment}
-            onCommentChange={setNewComment}
-            onCommentSubmit={handleComment}
-          />
-        </div>
+        <ImageSidebar
+          imageName={imageName}
+          liked={liked}
+          bookmarked={bookmarked}
+          likeCount={likeCount}
+          comments={comments}
+          newComment={newComment}
+          showShare={false}
+          onLike={handleLike}
+          onBookmark={handleBookmark}
+          onBanana={handleBanana}
+          onCommentChange={setNewComment}
+          onCommentSubmit={handleComment}
+          className="lg:col-span-1 flex flex-col border-l border-border lg:border-l-0"
+        />
       </div>
     </div>
   );
