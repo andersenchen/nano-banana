@@ -19,8 +19,11 @@ import GoogleAuth from "./google-auth";
 
 export function LoginForm({
   className,
+  redirectUrl = "/notes",
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: React.ComponentPropsWithoutRef<"div"> & {
+  redirectUrl?: string;
+}) {
   const emailId = useId();
   const passwordId = useId();
   const [email, setEmail] = useState("");
@@ -35,13 +38,14 @@ export function LoginForm({
     setIsLoading(true);
     setError(null);
 
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
-      router.push("/notes");
+      router.push(redirectUrl);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -104,7 +108,7 @@ export function LoginForm({
                   </span>
                 </div>
               </div>
-              <GoogleAuth showButton={true} />
+              <GoogleAuth showButton={true} enableOneTap={true} redirectUrl={redirectUrl} />
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}

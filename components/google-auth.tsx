@@ -45,9 +45,11 @@ const clearRenderTimeout = (timeoutRef: { current: NodeJS.Timeout | null }) => {
 const GoogleAuth = ({
   showButton = false,
   enableOneTap = true,
+  redirectUrl = "/notes",
 }: {
   showButton?: boolean;
   enableOneTap?: boolean;
+  redirectUrl?: string;
 }) => {
   const supabase = createClient();
   const router = useRouter();
@@ -93,8 +95,8 @@ const GoogleAuth = ({
           });
 
           if (error) throw error;
-          router.push("/notes");
-        } catch {
+          router.push(redirectUrl);
+        } catch (error) {
           // In production, you might want to send this to an error reporting service
         }
       };
@@ -146,7 +148,7 @@ const GoogleAuth = ({
       isInitialized.current = false;
       buttonRendered.current = false;
     };
-  }, [showButton, enableOneTap]);
+  }, [showButton, enableOneTap, redirectUrl]);
 
   return (
     <>
