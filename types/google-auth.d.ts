@@ -1,12 +1,6 @@
 declare module 'google-auth' {
-  // Main Google One Tap function
-  export default function googleOneTap(
-    options: GoogleOneTapOptions,
-    callback: (response: CredentialResponse) => void | Promise<void>
-  ): void;
-
   // Google accounts namespace
-  export type accounts = {
+  export interface GoogleAccounts {
     id: {
       initialize(options: GoogleOneTapInitializeOptions): void;
       prompt(notification?: PromptNotification): void;
@@ -31,22 +25,6 @@ declare module 'google-auth' {
       isSkippedMoment(): boolean;
       isDismissedMoment(): boolean;
     };
-  };
-
-  // Main options interface for googleOneTap function
-  export interface GoogleOneTapOptions {
-    client_id: string;
-    auto_select?: boolean;
-    cancel_on_tap_outside?: boolean;
-    context?: 'signin' | 'signup' | 'use';
-    login_uri?: string;
-    prompt_parent_id?: string;
-    nonce?: string;
-    state_cookie_domain?: string;
-    ux_mode?: 'redirect' | 'popup';
-    allowed_parent_origin?: string | string[];
-    itp_support?: boolean;
-    [key: string]: any; // Allow additional options
   }
 
   // Initialize options interface
@@ -64,7 +42,6 @@ declare module 'google-auth' {
     allowed_parent_origin?: string | string[];
     itp_support?: boolean;
     use_fedcm_for_prompt?: boolean;
-    [key: string]: any; // Allow additional options
   }
 
   // Credential response interface
@@ -96,6 +73,10 @@ declare module 'google-auth' {
     width?: string;
     local?: string;
     click_listener?: (event: Event) => void;
+    context?: 'signin' | 'signup' | 'use';
+    state_cookie_domain?: string;
+    disable_fedcm?: boolean;
+    itp_support?: boolean;
   }
 
   // Reason enums
@@ -127,7 +108,7 @@ declare module 'google-auth' {
 
   // Google Identity Services global object
   export interface GoogleIdentityServices {
-    accounts: accounts;
+    accounts: GoogleAccounts;
   }
 
   // Extend the global Window interface
