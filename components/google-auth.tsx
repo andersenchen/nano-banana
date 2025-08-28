@@ -136,7 +136,7 @@ const GoogleAuth = ({
     return () => {
       clearRenderTimeout(renderTimeout);
 
-      if (google?.accounts?.id) {
+      if (typeof google !== 'undefined' && google?.accounts?.id) {
         try {
           google.accounts.id.cancel();
         } catch {
