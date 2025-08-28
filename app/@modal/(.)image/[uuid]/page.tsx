@@ -2,9 +2,11 @@
 
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Heart, MessageCircle, Shuffle, Share, Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ImageActionBar from "@/components/image-action-bar";
+import ImageComments from "@/components/image-comments";
 
 interface Comment {
   id: string;
@@ -241,100 +243,24 @@ export default function ImageModal() {
               <h2 className="font-semibold truncate">{imageName || "Image"}</h2>
             </div>
 
-            {/* Action Bar */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={handleLike}
-                    className={`flex items-center space-x-2 p-2 rounded-full transition-all hover:bg-accent ${
-                      liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                    }`}
-                  >
-                    <Heart className={`h-6 w-6 ${liked ? "fill-current" : ""}`} />
-                    <span className="text-sm font-medium">{likeCount}</span>
-                  </button>
-                  
-                  <button className="flex items-center space-x-2 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all">
-                    <MessageCircle className="h-6 w-6" />
-                    <span className="text-sm font-medium">{comments.length}</span>
-                  </button>
-                  
-                  <button
-                    onClick={handleBanana}
-                    className="flex items-center space-x-2 p-2 rounded-full text-muted-foreground hover:text-yellow-500 hover:bg-accent transition-all"
-                  >
-                    <Shuffle className="h-6 w-6" />
-                    <span className="text-sm font-medium">Banana!</span>
-                  </button>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleShare}
-                    className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
-                  >
-                    <Share className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={handleBookmark}
-                    className={`p-2 rounded-full transition-all hover:bg-accent ${
-                      bookmarked ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"
-                    }`}
-                  >
-                    <Bookmark className={`h-5 w-5 ${bookmarked ? "fill-current" : ""}`} />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ImageActionBar
+              liked={liked}
+              bookmarked={bookmarked}
+              likeCount={likeCount}
+              commentCount={comments.length}
+              showShare={true}
+              onLike={handleLike}
+              onBookmark={handleBookmark}
+              onBanana={handleBanana}
+              onShare={handleShare}
+            />
 
-            {/* Comments List */}
-            <div className="flex-1 overflow-y-auto">
-              {comments.map((comment) => (
-                <div key={comment.id} className="p-4 border-b border-border last:border-b-0">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                      {comment.author[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-sm">{comment.author}</span>
-                        <span className="text-xs text-muted-foreground">{comment.createdAt}</span>
-                      </div>
-                      <p className="text-sm text-foreground">{comment.text}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {comments.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">
-                  <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No comments yet</p>
-                  <p className="text-sm">Be the first to comment!</p>
-                </div>
-              )}
-            </div>
-
-            {/* Comment Form */}
-            <form onSubmit={handleComment} className="p-4 border-t border-border">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="flex-1 p-3 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={!newComment.trim()}
-                  className="text-blue-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:text-blue-600 transition-colors"
-                >
-                  Post
-                </button>
-              </div>
-            </form>
+            <ImageComments
+              comments={comments}
+              newComment={newComment}
+              onCommentChange={setNewComment}
+              onCommentSubmit={handleComment}
+            />
           </div>
         </div>
       </DialogContent>
