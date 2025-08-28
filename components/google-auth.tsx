@@ -96,7 +96,7 @@ const GoogleAuth = ({
 
           if (error) throw error;
           router.push(redirectUrl);
-        } catch (error) {
+        } catch {
           // In production, you might want to send this to an error reporting service
         }
       };
