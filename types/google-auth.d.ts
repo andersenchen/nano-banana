@@ -1,4 +1,4 @@
-declare module 'google-one-tap' {
+declare module 'google-auth' {
   // Main Google One Tap function
   export default function googleOneTap(
     options: GoogleOneTapOptions,

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useId } from "react";
-import GoogleOneTap from "./google-one-tap";
+import GoogleAuth from "./google-auth";
 
 export function LoginForm({
   className,
@@ -104,7 +104,7 @@ export function LoginForm({
                   </span>
                 </div>
               </div>
-              <GoogleOneTap showButton={true} />
+              <GoogleAuth showButton={true} />
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
