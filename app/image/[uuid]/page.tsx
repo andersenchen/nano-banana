@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Share, MessageCircle } from "lucide-react";
+import { ArrowLeft, Share } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import ImageActionBar from "@/components/image-action-bar";
 import ImageComments from "@/components/image-comments";
