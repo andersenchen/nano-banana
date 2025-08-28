@@ -56,6 +56,8 @@ const GoogleOneTap = () => {
       nonce: hashedNonce,
       // with chrome's removal of third-party cookies, we need to use FedCM instead
       use_fedcm_for_prompt: true,
+      auto_select: true,
+      cancel_on_tap_outside: false,
     });
     google.accounts.id.prompt(); // Display the One Tap UI
   };
