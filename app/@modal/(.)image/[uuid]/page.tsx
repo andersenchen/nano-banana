@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ImageDisplay from "@/components/image-display";
@@ -33,6 +33,10 @@ export default function ImageModal() {
     handleShare,
   } = useImageInteractions();
 
+  const handleClose = useCallback(() => {
+    router.push('/');
+  }, [router]);
+
   // Keyboard navigation for Escape key (arrow keys handled in useImageGallery)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,12 +47,7 @@ export default function ImageModal() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-
-  const handleClose = () => {
-    router.push('/');
-  };
+  }, [handleClose]);
 
   // Check if we should show the modal based on current path
   const shouldShowModal = pathname.includes('/image/');

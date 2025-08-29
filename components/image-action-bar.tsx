@@ -28,8 +28,8 @@ export default function ImageActionBar({
   className = ""
 }: ImageActionBarProps) {
   return (
-    <div className={`p-4 border-b border-border ${className}`}>
-      <div className="flex items-center justify-between mb-4">
+    <div className={`px-4 py-2 border-b border-border ${className}`}>
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
             onClick={onLike}

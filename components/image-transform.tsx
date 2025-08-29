@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,14 @@ interface ImageTransformProps {
 export default function ImageTransform({ className = "" }: ImageTransformProps) {
   const [prompt, setPrompt] = useState("");
   const [isTransforming, setIsTransforming] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    // Autofocus the textarea when the component mounts
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
 
   const examples = [
     "Add text 'BANANA VIBES' at the top in bold yellow letters",
@@ -72,6 +80,7 @@ export default function ImageTransform({ className = "" }: ImageTransformProps) 
       
       <form onSubmit={handleTransform} className="space-y-3">
         <Textarea
+          ref={textareaRef}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => {

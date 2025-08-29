@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { MessageCircle } from "lucide-react";
 
 interface Comment {
@@ -24,6 +25,14 @@ export default function ImageComments({
   onCommentSubmit,
   className = ""
 }: ImageCommentsProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Autofocus the input when the component mounts
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
   return (
     <div className={`flex-1 flex flex-col ${className}`}>
       {/* Comments List */}
@@ -58,6 +67,7 @@ export default function ImageComments({
       <form onSubmit={onCommentSubmit} className="p-4 border-t border-border">
         <div className="flex items-center space-x-3">
           <input
+            ref={inputRef}
             type="text"
             value={newComment}
             onChange={(e) => onCommentChange(e.target.value)}

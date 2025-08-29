@@ -93,10 +93,11 @@ export default function ImageSidebar({
       <div className="flex-1 min-h-0">
         {activeTab === 'transform' ? (
           <div className="h-full overflow-y-auto">
-            <ImageTransform />
+            <ImageTransform key="transform" />
           </div>
         ) : (
           <ImageComments
+            key="comments"
             comments={comments}
             newComment={newComment}
             onCommentChange={onCommentChange}
