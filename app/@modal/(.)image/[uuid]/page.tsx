@@ -114,6 +114,7 @@ export default function ImageModal() {
             comments={comments}
             newComment={newComment}
             showShare={true}
+            imageUrl={imageUrl}
             onLike={handleLike}
             onBookmark={handleBookmark}
             onBanana={handleBanana}

@@ -83,6 +83,7 @@ export default function ImageDetailPage() {
           comments={comments}
           newComment={newComment}
           showShare={false}
+          imageUrl={imageUrl}
           onLike={handleLike}
           onBookmark={handleBookmark}
           onBanana={handleBanana}
