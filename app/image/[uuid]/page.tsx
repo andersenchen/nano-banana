@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ArrowLeft, Share } from "lucide-react";
 import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
@@ -28,6 +29,11 @@ export default function ImageDetailPage() {
     handleShare,
   } = useImageInteractions();
 
+  useEffect(() => {
+    if (imageName) {
+      document.title = imageName;
+    }
+  }, [imageName]);
 
   if (loading) {
     return (
