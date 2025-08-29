@@ -83,11 +83,11 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   if (loading) {
     return (
       <div className="w-full max-w-5xl px-5">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
+              className="aspect-square bg-gray-200 dark:bg-gray-800 animate-pulse"
             />
           ))}
         </div>
@@ -119,12 +119,12 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
 
   return (
     <div className="w-full max-w-5xl px-5">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
         {images.map((image) => (
           <Link
             key={image.id}
             href={`/image/${image.id}`}
-            className="aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800 block group cursor-pointer relative"
+            className="aspect-square overflow-hidden border border-gray-200 dark:border-gray-800 block group cursor-pointer relative"
           >
             <img
               src={image.url}
