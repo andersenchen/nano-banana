@@ -1,4 +1,4 @@
-import { AuthButton } from "@/components/auth-button";
+import { AuthButtonClient } from "@/components/auth-button-client";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ImageGrid } from "@/components/image-grid";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -24,7 +24,7 @@ export default function Home() {
                 <span className={`font-bold text-2xl ${inter.className}`}>NANO BANANA</span>
               </Link>
             </div>
-            {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
+            {!hasEnvVars ? <EnvVarWarning /> : <AuthButtonClient />}
           </div>
         </nav>
         <ImageGrid />

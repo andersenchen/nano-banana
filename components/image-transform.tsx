@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
+import { createClient } from "@/lib/supabase/client";
+import { LoginModal } from "./login-modal";
 
 interface ImageTransformProps {
   className?: string;
@@ -22,9 +23,34 @@ export default function ImageTransform({
   const [prompt, setPrompt] = useState("");
   const [isTransforming, setIsTransforming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Check user authentication status
+    const checkUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    checkUser();
+
+    // Listen for auth changes
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      // Close modal when user logs in
+      if (session?.user) {
+        setShowLoginModal(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Autofocus the textarea when the component mounts
@@ -85,6 +111,12 @@ export default function ImageTransform({
     if (!prompt.trim()) return;
     if (!imageUrl) {
       setError("No image available to transform");
+      return;
+    }
+
+    // Check authentication before proceeding - trigger modal if not authenticated
+    if (!user) {
+      setShowLoginModal(true);
       return;
     }
 
@@ -190,18 +222,19 @@ export default function ImageTransform({
 
       <div className="border-t border-border mb-4"></div>
       
+      
       {error && (
         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
           <p className="text-sm text-red-600 dark:text-red-400">
             {error.includes('sign in') ? (
               <>
                 Please{' '}
-                <Link 
-                  href={`/auth/login?redirect=${encodeURIComponent(pathname)}`}
+                <button 
+                  onClick={() => setShowLoginModal(true)}
                   className="underline hover:no-underline font-medium"
                 >
                   sign in
-                </Link>
+                </button>
                 {' '}to transform images
               </>
             ) : (
@@ -253,6 +286,12 @@ export default function ImageTransform({
           </Button>
         </div>
       </form>
+      
+      <LoginModal 
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        redirectUrl={pathname}
+      />
     </div>
   );
 }
