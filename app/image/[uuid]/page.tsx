@@ -1,97 +1,98 @@
-"use client";
+import { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import ImageDetailClient from "./client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { ArrowLeft, Share } from "lucide-react";
-import ImageDisplay from "@/components/image-display";
-import ImageSidebar from "@/components/image-sidebar";
-import LoadingSpinner from "@/components/loading-spinner";
-import { useImageInteractions } from "@/hooks/use-image-interactions";
-import { useImageFetch } from "@/hooks/use-image-fetch";
+interface PageProps {
+  params: Promise<{ uuid: string }>;
+}
 
-export default function ImageDetailPage() {
-  const params = useParams();
-  const router = useRouter();
+async function getImageData(uuid: string) {
+  const supabase = await createClient();
   
-  const { imageUrl, imageName, loading } = useImageFetch(params.uuid);
-  
-  const {
-    liked,
-    bookmarked,
-    likeCount,
-    comments,
-    newComment,
-    setNewComment,
-    handleLike,
-    handleBookmark,
-    handleComment,
-    handleBanana,
-    handleShare,
-  } = useImageInteractions();
+  try {
+    const { data, error } = await supabase.storage
+      .from("public-images")
+      .list("", { 
+        limit: 100,
+        sortBy: { column: "created_at", order: "desc" }
+      });
 
-  useEffect(() => {
-    if (imageName) {
-      document.title = imageName;
+    if (error) throw error;
+
+    const imageFiles = data?.filter(file => 
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
+    ) || [];
+
+    const imageFile = imageFiles.find(file => file.id === uuid);
+
+    if (!imageFile) {
+      return null;
     }
-  }, [imageName]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner variant="dark" />
-      </div>
-    );
+    const { data: urlData } = supabase.storage
+      .from("public-images")
+      .getPublicUrl(imageFile.name);
+    
+    return {
+      imageUrl: urlData.publicUrl,
+      imageName: imageFile.name,
+    };
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    return null;
+  }
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { uuid } = await params;
+  const imageData = await getImageData(uuid);
+  
+  if (!imageData) {
+    return {
+      title: "Image Not Found",
+    };
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-between p-4 max-w-6xl mx-auto">
-          <button
-            onClick={() => router.push('/')}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-lg font-semibold">{imageName || "Image"}</h1>
-          <button
-            onClick={handleShare}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
-          >
-            <Share className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
+  const { imageUrl, imageName } = imageData;
+  const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/image/${uuid}`;
+  
+  return {
+    title: imageName,
+    description: `View and interact with ${imageName}`,
+    openGraph: {
+      title: imageName,
+      description: `View and interact with ${imageName}`,
+      url: pageUrl,
+      siteName: "Image Gallery",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: imageName,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: imageName,
+      description: `View and interact with ${imageName}`,
+      images: [imageUrl],
+    },
+  };
+}
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8 min-h-[calc(100vh-73px)]">
-        {/* Image Section */}
-        <div className="lg:col-span-2 h-full">
-          <ImageDisplay 
-            imageUrl={imageUrl} 
-            imageName={imageName}
-            className="w-full h-full max-h-[80vh] object-contain"
-          />
-        </div>
+export default async function ImageDetailPage({ params }: PageProps) {
+  const { uuid } = await params;
+  const imageData = await getImageData(uuid);
 
-        {/* Sidebar */}
-        <ImageSidebar
-          imageName={imageName}
-          liked={liked}
-          bookmarked={bookmarked}
-          likeCount={likeCount}
-          comments={comments}
-          newComment={newComment}
-          showShare={false}
-          imageUrl={imageUrl}
-          onLike={handleLike}
-          onBookmark={handleBookmark}
-          onBanana={handleBanana}
-          onCommentChange={setNewComment}
-          onCommentSubmit={handleComment}
-          className="lg:col-span-1 flex flex-col border-l border-border lg:border-l-0"
-        />
-      </div>
-    </div>
-  );
+  if (!imageData) {
+    notFound();
+  }
+
+  const { imageUrl, imageName } = imageData;
+
+  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} />;
 }
