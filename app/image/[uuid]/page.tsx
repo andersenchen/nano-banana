@@ -43,7 +43,7 @@ export default function ImageDetailPage() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between p-4 max-w-6xl mx-auto">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
             className="p-2 hover:bg-accent rounded-full transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

@@ -19,6 +19,17 @@ export default function ImageTransform({ className = "" }: ImageTransformProps) 
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
+
+    // Add global Enter key handler to focus textarea when out of focus
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && textareaRef.current && document.activeElement !== textareaRef.current) {
+        e.preventDefault();
+        textareaRef.current.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
   const examples = [

@@ -32,6 +32,17 @@ export default function ImageComments({
     if (inputRef.current) {
       inputRef.current.focus();
     }
+
+    // Add global Enter key handler to focus input when out of focus
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && inputRef.current && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        inputRef.current.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
   return (
     <div className={`flex-1 flex flex-col ${className}`}>
