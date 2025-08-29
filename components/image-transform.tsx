@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
 import { createClient } from "@/lib/supabase/client";
 import { LoginModal } from "./login-modal";
+import TransformLoadingProgress from "./transform-loading-progress";
 
 interface ImageTransformProps {
   className?: string;
@@ -22,9 +23,11 @@ export default function ImageTransform({
 }: ImageTransformProps) {
   const [prompt, setPrompt] = useState("");
   const [isTransforming, setIsTransforming] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -71,14 +74,23 @@ export default function ImageTransform({
   }, []);
 
   const examples = [
-    "Add text 'BANANA VIBES' at the top in bold yellow letters",
-    "Make it more colorful and vibrant",
-    "Turn it into a painting style",
-    "Add text 'NANO BANANA' at the top in yellow comic sans font"
+    "Make this a meme by adding a hilarious caption",
+    "Add glowing red eyes and deep fried effect",
+    "Make it look like an over the top YouTube thumbnail (arrows, shocked face)",
+    "Style it as a Wikipedia article screenshot",
   ];
 
   const handleExampleClick = (exampleText: string) => {
     setPrompt(exampleText);
+  };
+
+  const handleCancelTransform = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+    }
+    setIsTransforming(false);
+    setError("Transformation cancelled");
   };
 
   const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
@@ -123,6 +135,9 @@ export default function ImageTransform({
     setIsTransforming(true);
     setError(null);
     
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     try {
       const imageBase64 = await convertImageToBase64(imageUrl);
       
@@ -135,6 +150,7 @@ export default function ImageTransform({
           imageBase64,
           prompt: prompt.trim(),
         }),
+        signal: controller.signal,
       });
 
       const contentType = response.headers.get('content-type');
@@ -174,19 +190,30 @@ export default function ImageTransform({
         throw new Error(uploadResult.error || 'Failed to save transformed image');
       }
 
-      if (onTransformComplete && uploadResult.imageId) {
-        onTransformComplete(uploadResult.imageId);
-      } else if (uploadResult.imageId) {
-        router.push(`/image/${uploadResult.imageId}`);
-      }
+      // Show completion state briefly before redirecting
+      setIsCompleted(true);
+      
+      setTimeout(() => {
+        if (onTransformComplete && uploadResult.imageId) {
+          onTransformComplete(uploadResult.imageId);
+        } else if (uploadResult.imageId) {
+          router.push(`/image/${uploadResult.imageId}`);
+        }
 
-      setPrompt("");
+        setPrompt("");
+        setIsTransforming(false);
+        setIsCompleted(false);
+      }, 800);
       
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('Transform error:', error);
       setError(error instanceof Error ? error.message : 'An unknown error occurred');
-    } finally {
       setIsTransforming(false);
+    } finally {
+      setAbortController(null);
     }
   };
 
@@ -214,7 +241,7 @@ export default function ImageTransform({
               disabled={isTransforming}
               className="w-full text-left p-3 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-&ldquo;{example}&rdquo;
+{example}
             </button>
           ))}
         </div>
@@ -256,7 +283,7 @@ export default function ImageTransform({
               handleTransform(formEvent);
             }
           }}
-          placeholder="Describe your transformation... (e.g., 'Make this image look like a Van Gogh painting with swirling brushstrokes')"
+          placeholder="Describe your transformation... (e.g., 'Make this a meme by adding a hilarious caption')"
           className="min-h-[80px] resize-none"
           disabled={isTransforming}
         />
@@ -272,20 +299,17 @@ export default function ImageTransform({
             size="default"
             className="ml-4 bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50"
           >
-            {isTransforming ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Transforming...
-              </>
-            ) : (
-              <>
-                <Wand2 className="h-4 w-4 mr-2" />
-                Transform
-              </>
-            )}
+            <Wand2 className="h-4 w-4 mr-2" />
+            {isTransforming ? "Transforming..." : "Transform"}
           </Button>
         </div>
       </form>
+      
+      <TransformLoadingProgress
+        isVisible={isTransforming}
+        onCancel={handleCancelTransform}
+        isCompleted={isCompleted}
+      />
       
       <LoginModal 
         isOpen={showLoginModal}

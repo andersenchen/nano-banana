@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     });
 
     const promptData = [
-      { text: prompt },
+      { text: `${prompt}\n\nOutput exactly one image.` },
       {
         inlineData: {
           mimeType: "image/png",
