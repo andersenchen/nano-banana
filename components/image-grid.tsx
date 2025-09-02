@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart } from "lucide-react";
-
-import { createClient } from "@/lib/supabase/client";
 
 interface ImageGridProps {
   bucketName?: string;
@@ -19,72 +18,100 @@ interface ImageFile {
 export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastImageRef = useRef<HTMLDivElement | null>(null);
 
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function fetchImages() {
-      // console.log('🔄 Starting to fetch images from bucket:', bucketName);
-      try {
-        const { data, error } = await supabase.storage
-          .from(bucketName)
-          .list("", {
-            limit: 100,
-            sortBy: { column: "created_at", order: "desc" },
-          });
-
-        // console.log('📁 Storage list response:', { data, error });
-
-        if (error) {
-          // console.error('❌ Storage list error:', error);
-          throw error;
-        }
-
-        if (data) {
-          // console.log('📄 Total files found:', data.length);
-          
-          const imageFiles = data.filter((file) =>
-            /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-          );
-          
-          // console.log('🖼️ Image files filtered:', imageFiles.length, 'files');
-          // console.log('🖼️ Image file details:', imageFiles.map(f => ({ id: f.id, name: f.name })));
-
-          const imageData = imageFiles.map((file) => {
-            const { data: urlData } = supabase.storage
-              .from(bucketName)
-              .getPublicUrl(file.name);
-            // console.log(`🔗 Generated URL for ${file.name} (ID: ${file.id}):`, urlData.publicUrl);
-            return {
-              id: file.id,
-              name: file.name,
-              url: urlData.publicUrl
-            };
-          });
-
-          // console.log('✅ Final image data:', imageData);
-          setImages(imageData);
-        } else {
-          // console.log('⚠️ No data returned from storage list');
-        }
-      } catch (err) {
-        console.error('💥 Error in fetchImages:', err);
-        setError(err instanceof Error ? err.message : "Failed to load images");
-      } finally {
-        // console.log('🏁 Setting loading to false');
+  const fetchImages = useCallback(async (pageNum: number, isLoadMore = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    }
+    
+    try {
+      const response = await fetch(
+        `/api/images?page=${pageNum}&limit=20&bucket=${bucketName}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch images");
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      if (isLoadMore) {
+        setImages(prev => [...prev, ...data.images]);
+      } else {
+        setImages(data.images);
+      }
+      
+      setHasMore(data.hasMore);
+    } catch (err) {
+      console.error("Error fetching images:", err);
+      setError(err instanceof Error ? err.message : "Failed to load images");
+    } finally {
+      if (isLoadMore) {
+        setLoadingMore(false);
+      } else {
         setLoading(false);
       }
     }
+  }, [bucketName]);
 
-    fetchImages();
-  }, [bucketName, supabase.storage]);
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchImages(nextPage, true);
+    }
+  }, [fetchImages, loadingMore, hasMore, page]);
+
+  useEffect(() => {
+    fetchImages(1);
+  }, [fetchImages]);
+
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasMore && !loadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    // Use a timeout to ensure the ref is attached after render
+    const timeoutId = setTimeout(() => {
+      if (lastImageRef.current) {
+        observerRef.current?.observe(lastImageRef.current);
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loadingMore, loadMore, images.length]);
 
   if (loading) {
     return (
       <div className="w-full max-w-5xl px-5">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 20 }).map((_, i) => (
             <div
               key={i}
               className="aspect-square bg-gray-200 dark:bg-gray-800 animate-pulse"
@@ -105,7 +132,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
     );
   }
 
-  if (images.length === 0) {
+  if (images.length === 0 && !loading) {
     return (
       <div className="w-full max-w-5xl px-5">
         <div className="text-center py-8">
@@ -120,16 +147,18 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   return (
     <div className="w-full max-w-5xl px-5">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-        {images.map((image) => (
+        {images.map((image, index) => (
           <Link
             key={image.id}
             href={`/image/${image.id}`}
             className="aspect-square overflow-hidden border border-gray-200 dark:border-gray-800 block group cursor-pointer relative"
           >
-            <img
+            <Image
               src={image.url}
               alt={image.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-200"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               loading="lazy"
             />
             <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/30 rounded-full px-2 py-1 backdrop-blur-sm">
@@ -139,6 +168,24 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
           </Link>
         ))}
       </div>
+      
+      {/* Loading More Indicator */}
+      {loadingMore && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 w-full mt-1">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={`loading-${i}`}
+              className="aspect-square bg-gray-200 dark:bg-gray-800 animate-pulse"
+            />
+          ))}
+        </div>
+      )}
+      
+      {/* Intersection Observer Target */}
+      <div
+        ref={lastImageRef}
+        className="h-20"
+      />
     </div>
   );
 }
