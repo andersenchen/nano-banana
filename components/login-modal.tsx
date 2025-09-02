@@ -33,10 +33,10 @@ export function LoginModal({ isOpen, onClose, redirectUrl }: LoginModalProps) {
         </DialogHeader>
         
         <div className="flex flex-col gap-4 mt-4">
-          {/* Google Auth Button with One Tap enabled */}
+          {/* Google Auth Button with One Tap disabled in modal to avoid conflicts */}
           <GoogleAuth 
             showButton={true} 
-            enableOneTap={true} 
+            enableOneTap={false} 
             redirectUrl={finalRedirectUrl}
           />
         </div>
