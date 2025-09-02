@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import GoogleAuth from "./google-auth";
+import { GoogleSignInButton } from "./google-signin-button";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -33,11 +33,12 @@ export function LoginModal({ isOpen, onClose, redirectUrl }: LoginModalProps) {
         </DialogHeader>
         
         <div className="flex flex-col gap-4 mt-4">
-          {/* Google Auth Button with One Tap disabled in modal to avoid conflicts */}
-          <GoogleAuth 
-            showButton={true} 
-            enableOneTap={false} 
+          <GoogleSignInButton 
             redirectUrl={finalRedirectUrl}
+            text="signin_with"
+            theme="outline"
+            size="large"
+            shape="pill"
           />
         </div>
       </DialogContent>

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useId } from "react";
-import GoogleAuth from "./google-auth";
+import { GoogleSignInButton } from "./google-signin-button";
 
 export function LoginForm({
   className,
@@ -108,7 +108,13 @@ export function LoginForm({
                   </span>
                 </div>
               </div>
-              <GoogleAuth showButton={true} enableOneTap={true} redirectUrl={redirectUrl} />
+              <GoogleSignInButton 
+                redirectUrl={redirectUrl}
+                text="signin_with"
+                theme="outline"
+                size="large"
+                shape="rectangular"
+              />
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
