@@ -147,7 +147,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   return (
     <div className="w-full max-w-5xl px-5">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-        {images.map((image, index) => (
+        {images.map((image) => (
           <Link
             key={image.id}
             href={`/image/${image.id}`}
