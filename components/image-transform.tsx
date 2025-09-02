@@ -29,6 +29,7 @@ export default function ImageTransform({
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -133,6 +134,17 @@ export default function ImageTransform({
 
     setIsTransforming(true);
     setError(null);
+    
+    // Scroll progress bar into view on mobile after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      if (progressRef.current && window.innerWidth < 1024) {
+        progressRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
     
     const controller = new AbortController();
     setAbortController(controller);
@@ -290,11 +302,13 @@ export default function ImageTransform({
         </div>
       </form>
       
-      <TransformLoadingProgress
-        isVisible={isTransforming}
-        onCancel={handleCancelTransform}
-        isCompleted={isCompleted}
-      />
+      <div ref={progressRef}>
+        <TransformLoadingProgress
+          isVisible={isTransforming}
+          onCancel={handleCancelTransform}
+          isCompleted={isCompleted}
+        />
+      </div>
       
       <LoginModal 
         isOpen={showLoginModal}

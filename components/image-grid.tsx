@@ -147,7 +147,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   return (
     <div className="w-full max-w-5xl px-5">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-        {images.map((image) => (
+        {images.map((image, index) => (
           <Link
             key={image.id}
             href={`/image/${image.id}`}
@@ -159,7 +159,8 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              loading="lazy"
+              priority={index === 0}
+              loading={index === 0 ? undefined : "lazy"}
             />
             <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/30 rounded-full px-2 py-1 backdrop-blur-sm">
               <Heart className="w-3.5 h-3.5 text-white" />
