@@ -73,7 +73,7 @@ export default function ImageModal() {
 
   return (
     <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[98vh] h-[98vh] lg:max-h-[95vh] lg:h-auto p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col">
         <DialogTitle className="sr-only">{imageName || "Image"}</DialogTitle>
         <DialogDescription className="sr-only">Image detail view with comments and interactions</DialogDescription>
 
@@ -98,7 +98,7 @@ export default function ImageModal() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 lg:h-full lg:min-h-0">
           {/* Image Section */}
-          <div className="lg:col-span-2 min-h-[40vh] lg:min-h-0 lg:h-full lg:overflow-hidden">
+          <div className="lg:col-span-2 min-h-[35vh] lg:min-h-0 lg:h-full lg:overflow-hidden">
             <ImageDisplay 
               imageUrl={imageUrl} 
               imageName={imageName} 
@@ -121,7 +121,7 @@ export default function ImageModal() {
             onShare={handleShare}
             onCommentChange={setNewComment}
             onCommentSubmit={handleComment}
-            className="lg:col-span-1 bg-white dark:bg-background flex flex-col border-t lg:border-t-0 lg:border-l border-border min-h-[50vh] lg:h-full lg:overflow-y-auto"
+            className="lg:col-span-1 bg-white dark:bg-background flex flex-col border-t lg:border-t-0 lg:border-l border-border min-h-[40vh] lg:h-full lg:overflow-y-auto"
           />
         </div>
       </DialogContent>

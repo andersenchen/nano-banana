@@ -56,14 +56,14 @@ export default function ImageTransform({
   }, []);
 
   useEffect(() => {
-    // Autofocus the textarea when the component mounts
-    if (textareaRef.current) {
+    // Only autofocus on desktop to prevent mobile scroll issues
+    if (textareaRef.current && window.innerWidth >= 1024) {
       textareaRef.current.focus();
     }
 
-    // Add global Enter key handler to focus textarea when out of focus
+    // Add global Enter key handler to focus textarea when out of focus (desktop only)
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && textareaRef.current && document.activeElement !== textareaRef.current) {
+      if (e.key === 'Enter' && textareaRef.current && document.activeElement !== textareaRef.current && window.innerWidth >= 1024) {
         e.preventDefault();
         textareaRef.current.focus();
       }
@@ -74,10 +74,9 @@ export default function ImageTransform({
   }, []);
 
   const examples = [
-    "Make this a meme by adding a hilarious caption",
-    "Add glowing red eyes and deep fried effect",
-    "Make it look like an over the top YouTube thumbnail (arrows, shocked face)",
-    "Style it as a Wikipedia article screenshot",
+    "Add a meme caption",
+    "Deep fried effect",
+    "YouTube thumbnail style",
   ];
 
   const handleExampleClick = (exampleText: string) => {
@@ -218,36 +217,26 @@ export default function ImageTransform({
   };
 
   return (
-    <div className={`p-4 ${className}`}>
-      <div className="mb-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <Wand2 className="h-5 w-5 text-yellow-600" />
-          <h3 className="font-medium">Transform Image</h3>
-        </div>
-        <p className="text-sm text-muted-foreground">Transform this image or add text to create memes</p>
+    <div className={`p-3 ${className}`}>
+      <div className="flex items-center space-x-2 mb-3">
+        <Wand2 className="h-5 w-5 text-yellow-600" />
+        <h3 className="font-medium">Transform Image</h3>
       </div>
 
-      <div className="border-t border-border mb-4"></div>
-
-      {/* Examples Section */}
-      <div className="mb-4">
-        <p className="text-sm text-muted-foreground mb-3">Try these examples:</p>
-        <div className="space-y-2">
-          {examples.map((example, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => handleExampleClick(example)}
-              disabled={isTransforming}
-              className="w-full text-left p-3 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-{example}
-            </button>
-          ))}
-        </div>
+      {/* Examples */}
+      <div className="mb-3 flex flex-wrap gap-2">
+        {examples.map((example, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => handleExampleClick(example)}
+            disabled={isTransforming}
+            className="px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {example}
+          </button>
+        ))}
       </div>
-
-      <div className="border-t border-border mb-4"></div>
       
       
       {error && (
@@ -284,20 +273,16 @@ export default function ImageTransform({
             }
           }}
           placeholder="Describe your transformation... (e.g., 'Make this a meme by adding a hilarious caption')"
-          className="min-h-[80px] resize-none"
+          className="min-h-[60px] resize-none"
           disabled={isTransforming}
         />
         
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground flex-1">
-            Be specific about styles, colors, effects, or text you want to add
-          </p>
-          
+        <div className="flex justify-end">
           <Button
             type="submit"
             disabled={!prompt.trim() || isTransforming || !imageUrl}
             size="default"
-            className="ml-4 bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50"
+            className="bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50"
           >
             <Wand2 className="h-4 w-4 mr-2" />
             {isTransforming ? "Transforming..." : "Transform"}
