@@ -73,7 +73,7 @@ export default function ImageModal() {
 
   return (
     <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[98vh] h-[98vh] lg:max-h-[95vh] lg:h-auto p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[98vh] h-auto lg:max-h-[95vh] lg:h-auto p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col">
         <DialogTitle className="sr-only">{imageName || "Image"}</DialogTitle>
         <DialogDescription className="sr-only">Image detail view with comments and interactions</DialogDescription>
 

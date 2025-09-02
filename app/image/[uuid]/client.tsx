@@ -57,7 +57,7 @@ export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailCl
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8 min-h-[calc(100vh-73px)]">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
         {/* Image Section */}
         <div className="lg:col-span-2 h-full">
           <ImageDisplay 
