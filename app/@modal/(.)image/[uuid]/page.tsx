@@ -21,17 +21,16 @@ export default function ImageModal() {
   
   const {
     liked,
-    bookmarked,
     likeCount,
     comments,
     newComment,
     setNewComment,
     handleLike,
-    handleBookmark,
     handleComment,
-    handleBanana,
     handleShare,
-  } = useImageInteractions();
+    handleCopy,
+    handleCopyLink,
+  } = useImageInteractions(imageUrl);
 
   const handleClose = useCallback(() => {
     router.push('/');
@@ -109,16 +108,15 @@ export default function ImageModal() {
           <ImageSidebar
             imageName={imageName}
             liked={liked}
-            bookmarked={bookmarked}
             likeCount={likeCount}
             comments={comments}
             newComment={newComment}
             showShare={true}
             imageUrl={imageUrl}
             onLike={handleLike}
-            onBookmark={handleBookmark}
-            onBanana={handleBanana}
             onShare={handleShare}
+            onCopy={handleCopy}
+            onCopyLink={handleCopyLink}
             onCommentChange={setNewComment}
             onCommentSubmit={handleComment}
             className="lg:col-span-1 bg-white dark:bg-background flex flex-col border-t lg:border-t-0 lg:border-l border-border min-h-[40vh] lg:h-full lg:overflow-y-auto"

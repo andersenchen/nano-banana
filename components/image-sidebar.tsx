@@ -7,16 +7,15 @@ import type { Comment } from "@/hooks/use-image-interactions";
 interface ImageSidebarProps {
   imageName: string;
   liked: boolean;
-  bookmarked: boolean;
   likeCount: number;
   comments: Comment[];
   newComment: string;
   showShare?: boolean;
   imageUrl?: string;
   onLike: () => void;
-  onBookmark: () => void;
-  onBanana: () => void;
   onShare?: () => void;
+  onCopy?: () => void;
+  onCopyLink?: () => void;
   onCommentChange: (value: string) => void;
   onCommentSubmit: (e: React.FormEvent) => void;
   className?: string;
@@ -25,16 +24,15 @@ interface ImageSidebarProps {
 export default function ImageSidebar({
   imageName,
   liked,
-  bookmarked,
   likeCount,
   comments,
   newComment,
   showShare = true,
   imageUrl,
   onLike,
-  onBookmark,
-  onBanana,
   onShare,
+  onCopy,
+  onCopyLink,
   onCommentChange,
   onCommentSubmit,
   className = "lg:col-span-1 bg-white dark:bg-background flex flex-col border-l lg:border-l border-border h-full"
@@ -49,14 +47,12 @@ export default function ImageSidebar({
 
       <ImageActionBar
         liked={liked}
-        bookmarked={bookmarked}
         likeCount={likeCount}
-        commentCount={comments.length}
         showShare={showShare}
         onLike={onLike}
-        onBookmark={onBookmark}
-        onBanana={onBanana}
         onShare={onShare}
+        onCopy={onCopy}
+        onCopyLink={onCopyLink}
       />
 
       {/* Tab Toggle */}

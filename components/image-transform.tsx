@@ -74,11 +74,44 @@ export default function ImageTransform({
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
-  const examples = [
-    "Add a meme caption",
-    "Deep fried effect",
-    "YouTube thumbnail style",
+  const allPrompts = [
+    // Visual Styles & Effects
+    "Add dramatic lighting and shadows",
+    "Make it look like a movie poster",
+    "Apply vintage film aesthetic",
+    "Add glowing neon effects",
+    "Create a comic book art style",
+    "Make it look professional and polished",
+    "Add artistic blur and depth of field",
+    
+    // Creative Transformations
+    "Add an interesting background element",
+    "Place the subject in a different environment",
+    "Create a minimalist, clean version",
+    "Transform into meme format with text",
+    "Make it YouTube thumbnail ready",
+    "Deep fry with oversaturated effects",
+    
+    // Mood & Atmosphere
+    "Make it feel more dramatic and intense",
+    "Add a cozy, warm atmosphere",
+    "Create a futuristic sci-fi vibe",
+    "Make it look mysterious and moody",
+    "Add energy and motion to the scene",
+    
+    // Conversational Editing
+    "Rotate the main subject 45 degrees",
+    "Move the focus to the background",
+    "Make the colors more vibrant and saturated",
+    "Add something interesting in the corner",
+    "Shift the perspective to a different angle",
   ];
+
+  // Random selection of 4 prompts on component mount
+  const [examples] = useState(() => {
+    const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  });
 
   const handleExampleClick = (exampleText: string) => {
     setPrompt(exampleText);

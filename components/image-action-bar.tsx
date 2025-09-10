@@ -1,32 +1,48 @@
 "use client";
 
-import { Heart, MessageCircle, Shuffle, Share, Bookmark } from "lucide-react";
+import { useState } from "react";
+import { Heart, Share, Copy, Check, Link } from "lucide-react";
 
 interface ImageActionBarProps {
   liked: boolean;
-  bookmarked: boolean;
   likeCount: number;
-  commentCount: number;
   showShare?: boolean;
   onLike: () => void;
-  onBookmark: () => void;
-  onBanana: () => void;
   onShare?: () => void;
+  onCopy?: () => void;
+  onCopyLink?: () => void;
   className?: string;
 }
 
 export default function ImageActionBar({
   liked,
-  bookmarked,
   likeCount,
-  commentCount,
   showShare = false,
   onLike,
-  onBookmark,
-  onBanana,
   onShare,
+  onCopy,
+  onCopyLink,
   className = ""
 }: ImageActionBarProps) {
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
+
+  const handleCopy = async () => {
+    if (onCopy) {
+      await onCopy();
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (onCopyLink) {
+      await onCopyLink();
+      setCopyLinkSuccess(true);
+      setTimeout(() => setCopyLinkSuccess(false), 2000);
+    }
+  };
+
   return (
     <div className={`px-4 py-2 border-b border-border ${className}`}>
       <div className="flex items-center justify-between">
@@ -40,22 +56,31 @@ export default function ImageActionBar({
             <Heart className={`h-6 w-6 ${liked ? "fill-current" : ""}`} />
             <span className="text-sm font-medium">{likeCount}</span>
           </button>
-          
-          <button className="flex items-center space-x-2 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all">
-            <MessageCircle className="h-6 w-6" />
-            <span className="text-sm font-medium">{commentCount}</span>
-          </button>
-          
-          <button
-            onClick={onBanana}
-            className="flex items-center space-x-2 p-2 rounded-full text-muted-foreground hover:text-yellow-500 hover:bg-accent transition-all"
-          >
-            <Shuffle className="h-6 w-6" />
-            <span className="text-sm font-medium">Banana!</span>
-          </button>
         </div>
         
         <div className="flex items-center space-x-2">
+          {onCopy && (
+            <button
+              onClick={handleCopy}
+              className="flex items-center space-x-2 p-2 rounded-full transition-all hover:bg-accent text-muted-foreground hover:text-foreground"
+            >
+              {copySuccess ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+              <span className="text-sm font-medium whitespace-nowrap">
+                {copySuccess ? "Copied!" : "Copy image"}
+              </span>
+            </button>
+          )}
+          {onCopyLink && (
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center space-x-2 p-2 rounded-full transition-all hover:bg-accent text-muted-foreground hover:text-foreground"
+            >
+              {copyLinkSuccess ? <Check className="h-5 w-5" /> : <Link className="h-5 w-5" />}
+              <span className="text-sm font-medium whitespace-nowrap">
+                {copyLinkSuccess ? "Copied!" : "Copy link"}
+              </span>
+            </button>
+          )}
           {showShare && onShare && (
             <button
               onClick={onShare}
@@ -64,14 +89,6 @@ export default function ImageActionBar({
               <Share className="h-5 w-5" />
             </button>
           )}
-          <button
-            onClick={onBookmark}
-            className={`p-2 rounded-full transition-all hover:bg-accent ${
-              bookmarked ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"
-            }`}
-          >
-            <Bookmark className={`h-5 w-5 ${bookmarked ? "fill-current" : ""}`} />
-          </button>
         </div>
       </div>
     </div>

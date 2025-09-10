@@ -18,17 +18,16 @@ export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailCl
   
   const {
     liked,
-    bookmarked,
     likeCount,
     comments,
     newComment,
     setNewComment,
     handleLike,
-    handleBookmark,
     handleComment,
-    handleBanana,
     handleShare,
-  } = useImageInteractions();
+    handleCopy,
+    handleCopyLink,
+  } = useImageInteractions(imageUrl);
 
   useEffect(() => {
     if (imageName) {
@@ -71,15 +70,14 @@ export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailCl
         <ImageSidebar
           imageName={imageName}
           liked={liked}
-          bookmarked={bookmarked}
           likeCount={likeCount}
           comments={comments}
           newComment={newComment}
           showShare={false}
           imageUrl={imageUrl}
           onLike={handleLike}
-          onBookmark={handleBookmark}
-          onBanana={handleBanana}
+          onCopy={handleCopy}
+          onCopyLink={handleCopyLink}
           onCommentChange={setNewComment}
           onCommentSubmit={handleComment}
           className="lg:col-span-1 flex flex-col border-l border-border lg:border-l-0"

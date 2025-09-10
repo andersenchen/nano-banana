@@ -9,7 +9,7 @@ export interface Comment {
   createdAt: string;
 }
 
-export function useImageInteractions() {
+export function useImageInteractions(imageUrl?: string) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [likeCount, setLikeCount] = useState(1234);
@@ -69,17 +69,55 @@ export function useImageInteractions() {
     }
   };
 
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch (error) {
+      alert("Failed to copy link to clipboard");
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!imageUrl) return;
+
+    try {
+      // Fetch the image as a blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      // Check if the browser supports clipboard write for images
+      if (navigator.clipboard && navigator.clipboard.write) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            [blob.type]: blob
+          })
+        ]);
+      } else {
+        // Fallback - copy the image URL as text
+        await navigator.clipboard.writeText(imageUrl);
+        throw new Error("Image clipboard not supported, copied URL instead");
+      }
+    } catch (error) {
+      // Fallback to copying the URL
+      try {
+        await navigator.clipboard.writeText(imageUrl);
+        alert("Image copying not supported, but URL has been copied to clipboard!");
+      } catch (e) {
+        alert("Failed to copy to clipboard");
+      }
+    }
+  };
+
   return {
     liked,
-    bookmarked,
     likeCount,
     comments,
     newComment,
     setNewComment,
     handleLike,
-    handleBookmark,
     handleComment,
-    handleBanana,
     handleShare,
+    handleCopy,
+    handleCopyLink,
   };
 }
