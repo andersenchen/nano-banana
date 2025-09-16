@@ -58,11 +58,10 @@ export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailCl
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
         {/* Image Section */}
-        <div className="lg:col-span-2 h-full">
-          <ImageDisplay 
-            imageUrl={imageUrl} 
+        <div className="lg:col-span-2 h-[80vh] relative">
+          <ImageDisplay
+            imageUrl={imageUrl}
             imageName={imageName}
-            className="w-full h-full max-h-[80vh] object-contain"
           />
         </div>
 
