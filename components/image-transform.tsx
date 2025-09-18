@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
 import { createClient } from "@/lib/supabase/client";
+import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
 import { LoginModal } from "./login-modal";
 import TransformLoadingProgress from "./transform-loading-progress";
 
@@ -16,10 +16,10 @@ interface ImageTransformProps {
   onTransformComplete?: (newImageId: string) => void;
 }
 
-export default function ImageTransform({ 
-  className = "", 
-  imageUrl, 
-  onTransformComplete 
+export default function ImageTransform({
+  className = "",
+  imageUrl,
+  onTransformComplete
 }: ImageTransformProps) {
   const [prompt, setPrompt] = useState("");
   const [isTransforming, setIsTransforming] = useState(false);
@@ -28,33 +28,77 @@ export default function ImageTransform({
   const [user, setUser] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [pendingTransform, setPendingTransform] = useState<{ prompt: string; imageUrl: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check user authentication status
+    // Check user authentication status first
     const checkUser = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+
+      // After setting user, immediately check for pending transform
+      if (user) {
+        const storedTransform = localStorage.getItem('pendingTransform');
+        if (storedTransform) {
+          try {
+            const parsed = JSON.parse(storedTransform);
+            // Only restore if it's for the same image
+            if (parsed.imageUrl === imageUrl) {
+              setPendingTransform(parsed);
+              // Immediately set the prompt so it's visible
+              setPrompt(parsed.prompt);
+            } else {
+              // Clear if it's for a different image
+              localStorage.removeItem('pendingTransform');
+            }
+          } catch (e) {
+            localStorage.removeItem('pendingTransform');
+          }
+        }
+      }
     };
 
     checkUser();
 
     // Listen for auth changes
     const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
       // Close modal when user logs in
       if (session?.user) {
         setShowLoginModal(false);
+
+        // Clear pending transform - will be handled in a separate effect
+
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Handle pending transform after user logs in
+  useEffect(() => {
+    if (user && pendingTransform && !isTransforming && imageUrl === pendingTransform.imageUrl) {
+      // Auto-trigger the transformation immediately
+      // Clear from localStorage first
+      localStorage.removeItem('pendingTransform');
+      setPendingTransform(null);
+
+      // Use requestAnimationFrame for next paint instead of setTimeout
+      requestAnimationFrame(() => {
+        // Trigger the form submission using the ref
+        if (formRef.current) {
+          formRef.current.requestSubmit();
+        }
+      });
+    }
+  }, [user, pendingTransform, isTransforming, imageUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Only autofocus on desktop to prevent mobile scroll issues
@@ -107,11 +151,13 @@ export default function ImageTransform({
     "Shift the perspective to a different angle",
   ];
 
-  // Random selection of 4 prompts on component mount
-  const [examples] = useState(() => {
-    const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-  });
+  // Use useMemo to ensure consistent prompts between server and client
+  const examples = useMemo(() => {
+    // Use a deterministic selection based on pathname or imageUrl to avoid hydration issues
+    const seed = imageUrl ? imageUrl.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+    const startIndex = seed % (allPrompts.length - 4);
+    return allPrompts.slice(startIndex, startIndex + 4);
+  }, [imageUrl]);
 
   const handleExampleClick = (exampleText: string) => {
     setPrompt(exampleText);
@@ -161,23 +207,28 @@ export default function ImageTransform({
 
     // Check authentication before proceeding - trigger modal if not authenticated
     if (!user) {
+      // Store the pending transformation data
+      const pendingData = { prompt: prompt.trim(), imageUrl: imageUrl || '' };
+      setPendingTransform(pendingData);
+      // Also store in localStorage to persist across OAuth redirect
+      localStorage.setItem('pendingTransform', JSON.stringify(pendingData));
       setShowLoginModal(true);
       return;
     }
 
     setIsTransforming(true);
     setError(null);
-    
-    // Scroll progress bar into view on mobile after a brief delay to ensure it's rendered
-    setTimeout(() => {
+
+    // Scroll progress bar into view on mobile immediately
+    requestAnimationFrame(() => {
       if (progressRef.current && window.innerWidth < 1024) {
-        progressRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
+        progressRef.current.scrollIntoView({
+          behavior: 'smooth',
           block: 'nearest',
           inline: 'nearest'
         });
       }
-    }, 100);
+    });
     
     const controller = new AbortController();
     setAbortController(controller);
@@ -237,6 +288,9 @@ export default function ImageTransform({
       // Show completion state briefly before redirecting
       setIsCompleted(true);
       
+      // Clear any pending transform from localStorage on success
+      localStorage.removeItem('pendingTransform');
+
       setTimeout(() => {
         if (onTransformComplete && uploadResult.imageId) {
           onTransformComplete(uploadResult.imageId);
@@ -305,7 +359,7 @@ export default function ImageTransform({
         </div>
       )}
       
-      <form onSubmit={handleTransform} className="space-y-3">
+      <form ref={formRef} onSubmit={handleTransform} className="space-y-3">
         <Textarea
           ref={textareaRef}
           value={prompt}
@@ -343,9 +397,14 @@ export default function ImageTransform({
         />
       </div>
       
-      <LoginModal 
+      <LoginModal
         isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
+        onClose={() => {
+          setShowLoginModal(false);
+          // Clear pending transform if user closes modal without logging in
+          setPendingTransform(null);
+          localStorage.removeItem('pendingTransform');
+        }}
         redirectUrl={pathname}
       />
     </div>

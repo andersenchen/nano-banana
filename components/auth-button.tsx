@@ -16,7 +16,7 @@ export async function AuthButton() {
     </div>
   ) : (
     <Button asChild size="lg" variant={"default"}>
-      <Link href="/auth/login">Log in</Link>
+      <Link href="/auth/login">Login to make memes</Link>
     </Button>
   );
 }

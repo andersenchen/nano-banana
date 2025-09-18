@@ -25,7 +25,7 @@ export function LoginModal({ isOpen, onClose, redirectUrl }: LoginModalProps) {
       <DialogContent className="sm:max-w-md min-h-[300px] flex flex-col justify-center">
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold text-center">
-            Sign in with Google to create memes
+            Sign in with Google to make memes
           </DialogTitle>
           <DialogDescription className="text-center">
             Transform images and create epic memes in seconds

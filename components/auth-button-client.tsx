@@ -55,7 +55,7 @@ export function AuthButtonClient() {
           variant="default"
           onClick={() => setShowLoginModal(true)}
         >
-          Log in
+          Login to make memes
         </Button>
       )}
       
