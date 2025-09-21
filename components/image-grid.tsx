@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
+import { useImageRefresh } from "@/lib/image-refresh-context";
 
 interface ImageGridProps {
   bucketName?: string;
@@ -22,9 +23,10 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastImageRef = useRef<HTMLDivElement | null>(null);
+  const { refreshKey } = useImageRefresh();
 
   const fetchImages = useCallback(async (pageNum: number, isLoadMore = false) => {
     if (isLoadMore) {
@@ -74,8 +76,26 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   }, [fetchImages, loadingMore, hasMore, page]);
 
   useEffect(() => {
-    fetchImages(1);
-  }, [fetchImages]);
+    // Fetch fresh images when refreshKey changes
+    if (refreshKey > 0) {
+      // Refresh triggered - just swap when ready
+      setPage(1);
+      fetch(`/api/images?page=1&limit=20&bucket=${bucketName}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.images) {
+            setImages(data.images);
+            setHasMore(data.hasMore);
+          }
+        })
+        .catch(err => {
+          console.error("Error refreshing images:", err);
+        });
+    } else {
+      // Initial load
+      fetchImages(1);
+    }
+  }, [refreshKey, bucketName]);
 
   useEffect(() => {
     if (observerRef.current) {

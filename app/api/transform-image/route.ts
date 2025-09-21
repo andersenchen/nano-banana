@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
-  console.log("Transform API called");
   try {
     // Check if user is authenticated
     const supabase = await createClient();
@@ -17,8 +16,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { imageBase64, prompt } = await request.json();
-    console.log("Received prompt:", prompt?.substring(0, 100));
-    console.log("Received imageBase64 length:", imageBase64?.length);
 
     if (!imageBase64 || !prompt) {
       return NextResponse.json(

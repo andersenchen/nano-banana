@@ -1,8 +1,13 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { AuthButtonClient } from "@/components/auth-button-client";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { ImageGrid } from "@/components/image-grid";
+import { ImageUploadButton } from "@/components/image-upload-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 
@@ -13,6 +18,25 @@ const inter = Inter({
 });
 
 export default function Home() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    checkUser();
+
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-8 items-center">
@@ -24,7 +48,10 @@ export default function Home() {
                 <span className={`font-bold text-2xl ${inter.className}`}>NANO BANANA</span>
               </Link>
             </div>
-            {!hasEnvVars ? <EnvVarWarning /> : <AuthButtonClient />}
+            <div className="flex gap-3 items-center">
+              {user && <ImageUploadButton />}
+              {!hasEnvVars ? <EnvVarWarning /> : <AuthButtonClient />}
+            </div>
           </div>
         </nav>
         <ImageGrid />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { ImageRefreshProvider } from "@/lib/image-refresh-context";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -35,8 +36,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          {modal}
+          <ImageRefreshProvider>
+            {children}
+            {modal}
+          </ImageRefreshProvider>
         </ThemeProvider>
       </body>
     </html>

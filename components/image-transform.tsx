@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
+import { useImageRefresh } from "@/lib/image-refresh-context";
 import { LoginModal } from "./login-modal";
 import TransformLoadingProgress from "./transform-loading-progress";
 
@@ -28,6 +29,7 @@ export default function ImageTransform({
   const [user, setUser] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const { triggerRefresh } = useImageRefresh();
   const [pendingTransform, setPendingTransform] = useState<{ prompt: string; imageUrl: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -287,6 +289,7 @@ export default function ImageTransform({
 
       // Show completion state briefly before redirecting
       setIsCompleted(true);
+      triggerRefresh();
       
       // Clear any pending transform from localStorage on success
       localStorage.removeItem('pendingTransform');
