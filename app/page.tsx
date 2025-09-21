@@ -48,9 +48,9 @@ export default function Home() {
                 <span className="text-4xl">🍌</span>
                 <span className={`font-bold text-2xl ${inter.className}`}>NANO BANANA</span>
               </Link>
+              {user && <ImageUploadButton />}
             </div>
             <div className="flex gap-3 items-center">
-              {user && <ImageUploadButton />}
               {!hasEnvVars ? <EnvVarWarning /> : <AuthButtonClient />}
             </div>
           </div>
