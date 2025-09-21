@@ -8,6 +8,7 @@ import { ImageUploadButton } from "@/components/image-upload-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 
@@ -18,7 +19,7 @@ const inter = Inter({
 });
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {

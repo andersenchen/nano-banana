@@ -95,7 +95,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
       // Initial load
       fetchImages(1);
     }
-  }, [refreshKey, bucketName]);
+  }, [refreshKey, bucketName, fetchImages]);
 
   useEffect(() => {
     if (observerRef.current) {
@@ -125,7 +125,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loadingMore, loadMore, images.length]);
+  }, [hasMore, loadingMore, loadMore]);
 
   if (loading) {
     return (
