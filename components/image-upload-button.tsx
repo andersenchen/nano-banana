@@ -198,11 +198,11 @@ export function ImageUploadButton() {
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
         variant="outline"
-        size="default"
-        className="border-gray-600 dark:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+        size="sm"
+        className="text-muted-foreground hover:text-foreground"
       >
         <Upload className="h-4 w-4" />
-        {uploading ? "Uploading..." : "Upload Image"}
+        {uploading ? "Uploading..." : "Upload New Image"}
       </Button>
 
       {/* Drag overlay */}
