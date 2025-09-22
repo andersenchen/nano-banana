@@ -59,12 +59,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   return {
     title: imageName,
-    description: `Make memes with NANO BANANA`,
+    description: `View on mememaker`,
     openGraph: {
       title: imageName,
-      description: `Make memes with NANO BANANA`,
+      description: `View on mememaker`,
       url: pageUrl,
-      siteName: "Image Gallery",
+      siteName: "mememaker",
       images: [
         {
           url: imageUrl,
@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: "summary_large_image",
       title: imageName,
-      description: `Make memes with NANO BANANA`,
+      description: `View on mememaker`,
       images: [imageUrl],
     },
   };

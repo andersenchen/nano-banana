@@ -6,6 +6,7 @@ import { EnvVarWarning } from "@/components/env-var-warning";
 import { ImageGrid } from "@/components/image-grid";
 import { ImageUploadButton } from "@/components/image-upload-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { MememakerLogoMinimal } from "@/components/mememaker-logo";
 import { hasEnvVars } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -44,9 +45,9 @@ export default function Home() {
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
           <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
             <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"} className="flex items-center gap-3">
-                <span className="text-4xl">🍌</span>
-                <span className={`font-bold text-2xl ${inter.className}`}>NANO BANANA</span>
+              <Link href={"/"} className="flex items-center gap-2">
+                <MememakerLogoMinimal className="w-10 h-8" />
+                <span className={`font-bold text-xl tracking-tight ${inter.className}`}>mememaker</span>
               </Link>
               {user && <ImageUploadButton />}
             </div>
