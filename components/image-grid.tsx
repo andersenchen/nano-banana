@@ -112,20 +112,17 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
       { threshold: 0.1, rootMargin: '100px' }
     );
 
-    // Use a timeout to ensure the ref is attached after render
-    const timeoutId = setTimeout(() => {
-      if (lastImageRef.current) {
-        observerRef.current?.observe(lastImageRef.current);
-      }
-    }, 100);
+    // Observe the sentinel element
+    if (lastImageRef.current) {
+      observerRef.current.observe(lastImageRef.current);
+    }
 
     return () => {
-      clearTimeout(timeoutId);
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loadingMore, loadMore]);
+  }, [hasMore, loadingMore, loadMore, images.length]);
 
   if (loading) {
     return (
