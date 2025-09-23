@@ -174,30 +174,6 @@ export default function ImageTransform({
     setError("Transformation cancelled");
   };
 
-  const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Could not get canvas context'));
-          return;
-        }
-        
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        
-        const dataURL = canvas.toDataURL('image/png');
-        const base64 = dataURL.split(',')[1];
-        resolve(base64);
-      };
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = imageUrl;
-    });
-  };
 
   const handleTransform = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,17 +210,15 @@ export default function ImageTransform({
     
     const controller = new AbortController();
     setAbortController(controller);
-    
+
     try {
-      const imageBase64 = await convertImageToBase64(imageUrl);
-      
       const response = await fetch('/api/transform-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageBase64,
+          imageUrl,
           prompt: prompt.trim(),
         }),
         signal: controller.signal,

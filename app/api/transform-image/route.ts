@@ -15,11 +15,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { imageBase64, prompt } = await request.json();
+    const { imageUrl, prompt } = await request.json();
 
-    if (!imageBase64 || !prompt) {
+    if (!imageUrl || !prompt) {
       return NextResponse.json(
-        { error: "Image and prompt are required" },
+        { error: "Image URL and prompt are required" },
         { status: 400 }
       );
     }
@@ -32,6 +32,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch the image from the URL
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch image from URL" },
+        { status: 400 }
+      );
+    }
+
+    // Convert image to base64
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+    const mimeType = imageResponse.headers.get('content-type') || 'image/png';
+
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY
     });
@@ -40,7 +54,7 @@ export async function POST(request: NextRequest) {
       { text: `${prompt}\n\nOutput exactly one image.` },
       {
         inlineData: {
-          mimeType: "image/png",
+          mimeType,
           data: imageBase64,
         },
       },
