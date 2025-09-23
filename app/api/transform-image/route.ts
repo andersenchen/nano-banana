@@ -41,8 +41,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check Content-Length header first if available
+    const contentLength = imageResponse.headers.get('content-length');
+    const MAX_SIZE_MB = 10; // 10MB limit
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+    if (contentLength && parseInt(contentLength) > MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: `Image size exceeds ${MAX_SIZE_MB}MB limit` },
+        { status: 400 }
+      );
+    }
+
     // Convert image to base64
     const imageBuffer = await imageResponse.arrayBuffer();
+
+    // Double-check actual size after download
+    if (imageBuffer.byteLength > MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: `Image size exceeds ${MAX_SIZE_MB}MB limit` },
+        { status: 400 }
+      );
+    }
+
     const imageBase64 = Buffer.from(imageBuffer).toString('base64');
     const mimeType = imageResponse.headers.get('content-type') || 'image/png';
 

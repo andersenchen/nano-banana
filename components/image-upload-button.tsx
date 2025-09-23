@@ -28,6 +28,14 @@ export function ImageUploadButton() {
       return;
     }
 
+    // Check file size (10MB limit)
+    const MAX_SIZE_MB = 10;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      alert(`${file.name} exceeds ${MAX_SIZE_MB}MB size limit`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const preview = e.target?.result as string;
@@ -80,6 +88,14 @@ export function ImageUploadButton() {
   const directUploadFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       alert("Please select an image file");
+      return;
+    }
+
+    // Check file size (10MB limit)
+    const MAX_SIZE_MB = 10;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      alert(`${file.name} exceeds ${MAX_SIZE_MB}MB size limit`);
       return;
     }
 
