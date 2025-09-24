@@ -42,9 +42,13 @@ export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailCl
         <div className="flex items-center justify-between p-4 max-w-6xl mx-auto">
           <button
             onClick={() => router.push('/')}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
+            className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg transition-colors group"
+            aria-label="Back to Gallery"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-base font-medium">
+              Back to Gallery
+            </span>
           </button>
           <h1 className="text-lg font-semibold">{imageName || "Image"}</h1>
           <button
