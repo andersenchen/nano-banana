@@ -49,7 +49,17 @@ export default function Home() {
                 <MememakerLogoMinimal className="w-10 h-8" />
                 <span className={`font-bold text-xl tracking-tight ${inter.className}`}>mememaker</span>
               </Link>
-              {user && <ImageUploadButton />}
+              {user && (
+                <>
+                  <Link
+                    href="/my-creations"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    My Creations
+                  </Link>
+                  <ImageUploadButton />
+                </>
+              )}
             </div>
             <div className="flex gap-3 items-center">
               {!hasEnvVars ? <EnvVarWarning /> : <AuthButtonClient />}
