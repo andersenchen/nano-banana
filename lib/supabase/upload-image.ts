@@ -49,6 +49,8 @@ export async function uploadImageToSupabase(
 
       if (dbError) {
         console.error("Error inserting image metadata:", dbError);
+        await supabase.storage.from("public-images").remove([fileName]);
+        return { success: false, error: `Failed to save image metadata: ${dbError.message}` };
       }
     }
 
