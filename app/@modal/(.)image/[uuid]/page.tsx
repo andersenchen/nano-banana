@@ -10,12 +10,14 @@ import LoadingSpinner from "@/components/loading-spinner";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
 import { useImageFetch } from "@/hooks/use-image-fetch";
 import { useImageGallery } from "@/hooks/use-image-gallery";
+import { useImageRefresh } from "@/lib/image-refresh-context";
 
 export default function ImageModal() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  
+  const { triggerRefresh } = useImageRefresh();
+
   const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments: fetchedComments, loading } = useImageFetch(params.uuid);
   const { allImages, currentImageIndex, handlePrevious, handleNext } = useImageGallery(params.uuid);
 
@@ -40,8 +42,11 @@ export default function ImageModal() {
   });
 
   const handleClose = useCallback(() => {
+    if (liked !== userLiked) {
+      triggerRefresh();
+    }
     router.push('/');
-  }, [router]);
+  }, [router, liked, userLiked, triggerRefresh]);
 
   // Keyboard navigation for Escape key (arrow keys handled in useImageGallery)
   useEffect(() => {

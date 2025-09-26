@@ -35,7 +35,7 @@ async function getImageData(uuid: string) {
         .single() : Promise.resolve({ data: null }),
       supabase
         .from("comments")
-        .select("id, text, user_id, created_at, users(username)")
+        .select("id, text, user_id, username, created_at")
         .eq("image_id", uuid)
         .order("created_at", { ascending: false })
     ]);
@@ -48,7 +48,7 @@ async function getImageData(uuid: string) {
     const formattedComments = commentsData.data?.map((comment: any) => ({
       id: comment.id,
       text: comment.text,
-      username: comment.users?.username || "Anonymous",
+      username: comment.username || "Anonymous",
       created_at: comment.created_at,
       user_id: comment.user_id,
     })) || [];
