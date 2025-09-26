@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { useImageRefresh } from "@/lib/image-refresh-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface ImageGridProps {
   bucketName?: string;
@@ -27,6 +28,8 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [pendingLikes, setPendingLikes] = useState<Set<string>>(new Set());
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastImageRef = useRef<HTMLDivElement | null>(null);
@@ -80,9 +83,24 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   }, [fetchImages, loadingMore, hasMore, page]);
 
   useEffect(() => {
-    // Fetch fresh images when refreshKey changes
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id || null);
+      setAuthChecked(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUserId(session?.user?.id || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!authChecked) return;
+
     if (refreshKey > 0) {
-      // Refresh triggered - just swap when ready
       setPage(1);
       fetch(`/api/images?page=1&limit=20&bucket=${bucketName}`)
         .then(response => response.json())
@@ -96,10 +114,9 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
           console.error("Error refreshing images:", err);
         });
     } else {
-      // Initial load
       fetchImages(1);
     }
-  }, [refreshKey, bucketName, fetchImages]);
+  }, [authChecked, refreshKey, bucketName, fetchImages, userId]);
 
   useEffect(() => {
     if (observerRef.current) {
