@@ -8,7 +8,7 @@ An AI-powered image transformation and meme creation platform built with Next.js
 
 ## Overview
 
-Mememaker is a modern web application that allows users to upload images and transform them using AI-powered text prompts. Users can create unique memes and image variations, share them with the community, and interact through likes and comments.
+Mememaker is a modern web application that allows users to upload images and remix them using AI-powered text prompts. Users can create unique memes and image variations, share them with the community, and interact through likes and comments.
 
 ## Features
 
@@ -29,7 +29,7 @@ Mememaker is a modern web application that allows users to upload images and tra
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Components**: [shadcn/ui](https://ui.shadcn.com/)
 - **Backend**: [Supabase](https://supabase.com/) (Auth, Database, Storage)
-- **AI**: [Google Gemini AI](https://ai.google.dev/) (gemini-2.5-flash-image-preview model)
+- **AI**: [Google's Nano Banana](https://ai.google.dev/) (Gemini 2.5 Flash - gemini-2.5-flash-image-preview model)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Linting**: [Biome](https://biomejs.dev/) + ESLint
 
@@ -74,13 +74,17 @@ Before you begin, ensure you have:
    NEXT_PUBLIC_SUPABASE_URL=your-project-url
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your-anon-key
 
-   # Google OAuth
+   # Google OAuth for app
    # Get from: https://console.cloud.google.com/apis/credentials
    NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
 
    # Google Gemini AI
    # Get from: https://makersuite.google.com/app/apikey
    GEMINI_API_KEY=your-gemini-api-key
+
+   # Google OAuth credentials for Supabase (get from Google Cloud Console)
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
    ```
 
 4. **Set up Supabase**

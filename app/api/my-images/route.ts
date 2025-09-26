@@ -18,24 +18,10 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { data: storageObjects } = await supabase
-      .from("user_storage_objects")
-      .select("name")
-      .eq("bucket_id", bucketName)
-      .eq("owner", user.id);
-
-    if (!storageObjects || storageObjects.length === 0) {
-      return Response.json({ images: [], hasMore: false });
-    }
-
-    const userImageNames = storageObjects
-      .filter((file) => /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
-      .map((file) => file.name);
-
     const { data: images, error } = await supabase
       .from("images")
       .select("id, name, likes_count, comments_count, created_at")
-      .in("name", userImageNames)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
