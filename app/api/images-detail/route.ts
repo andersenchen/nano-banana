@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const userLiked = !!likeData.data;
-    const formattedComments = commentsData.data?.map((comment: any) => ({
+    const formattedComments = commentsData.data?.map((comment: { id: string; text: string; username?: string; created_at: string; user_id: string }) => ({
       id: comment.id,
       text: comment.text,
       username: comment.username || "Anonymous",
