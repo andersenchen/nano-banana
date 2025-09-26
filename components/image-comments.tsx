@@ -6,8 +6,23 @@ import { MessageCircle } from "lucide-react";
 interface Comment {
   id: string;
   text: string;
-  author: string;
-  createdAt: string;
+  username: string;
+  created_at: string;
+}
+
+function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
 }
 
 interface ImageCommentsProps {
@@ -52,12 +67,12 @@ export default function ImageComments({
           <div key={comment.id} className="p-4 border-b border-border last:border-b-0">
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                {comment.author[0].toUpperCase()}
+                {comment.username?.[0]?.toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-medium text-sm">{comment.author}</span>
-                  <span className="text-xs text-muted-foreground">{comment.createdAt}</span>
+                  <span className="font-medium text-sm">{comment.username || 'User'}</span>
+                  <span className="text-xs text-muted-foreground">{formatTimestamp(comment.created_at)}</span>
                 </div>
                 <p className="text-sm text-foreground">{comment.text}</p>
               </div>

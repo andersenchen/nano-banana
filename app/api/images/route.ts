@@ -6,45 +6,41 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
   const bucketName = searchParams.get("bucket") || "public-images";
-  
+
   const offset = (page - 1) * limit;
-  
+
   try {
     const supabase = await createClient();
-    
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .list("", {
-        limit: limit,
-        offset: offset,
-        sortBy: { column: "created_at", order: "desc" },
-      });
+
+    const { data: images, error } = await supabase
+      .from("images")
+      .select("id, name, likes_count, comments_count, created_at")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
-    if (!data) {
+    if (!images) {
       return Response.json({ images: [], hasMore: false });
     }
 
-    const imageFiles = data.filter((file) =>
-      /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-    );
-
-    const imageData = imageFiles.map((file) => {
+    const imageData = images.map((image) => {
       const { data: urlData } = supabase.storage
         .from(bucketName)
-        .getPublicUrl(file.name);
+        .getPublicUrl(image.name);
+
       return {
-        id: file.id,
-        name: file.name,
-        url: urlData.publicUrl
+        id: image.id,
+        name: image.name,
+        url: urlData.publicUrl,
+        likesCount: image.likes_count,
+        commentsCount: image.comments_count,
       };
     });
 
-    // hasMore is true if we got the full limit of files (meaning there might be more)
-    const hasMore = data.length === limit;
+    const hasMore = images.length === limit;
 
     return Response.json({
       images: imageData,

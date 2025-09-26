@@ -36,6 +36,24 @@ export async function uploadImageToSupabase(
       return { success: false, error: error.message };
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user && data.id) {
+      const { error: dbError } = await supabase
+        .from("images")
+        .insert({
+          id: data.id,
+          user_id: user.id,
+          name: fileName,
+        });
+
+      if (dbError) {
+        console.error("Error inserting image metadata:", dbError);
+        await supabase.storage.from("public-images").remove([fileName]);
+        return { success: false, error: `Failed to save image metadata: ${dbError.message}` };
+      }
+    }
+
     return { success: true, imageId: data.id };
   } catch (error) {
     console.error("Error in uploadImageToSupabase:", error);

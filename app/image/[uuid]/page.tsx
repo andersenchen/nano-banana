@@ -3,40 +3,63 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ImageDetailClient from "./client";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ uuid: string }>;
 }
 
 async function getImageData(uuid: string) {
   const supabase = await createClient();
-  
+
   try {
-    const { data, error } = await supabase.storage
-      .from("public-images")
-      .list("", { 
-        limit: 100,
-        sortBy: { column: "created_at", order: "desc" }
-      });
+    const { data: image, error } = await supabase
+      .from("images")
+      .select("id, name, likes_count, comments_count")
+      .eq("id", uuid)
+      .single();
 
-    if (error) throw error;
-
-    const imageFiles = data?.filter(file => 
-      /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-    ) || [];
-
-    const imageFile = imageFiles.find(file => file.id === uuid);
-
-    if (!imageFile) {
+    if (error || !image) {
       return null;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const [likeData, commentsData] = await Promise.all([
+      user ? supabase
+        .from("likes")
+        .select("id")
+        .eq("image_id", uuid)
+        .eq("user_id", user.id)
+        .single() : Promise.resolve({ data: null }),
+      supabase
+        .from("comments")
+        .select("id, text, user_id, username, created_at")
+        .eq("image_id", uuid)
+        .order("created_at", { ascending: false })
+    ]);
+
+    const userLiked = !!likeData.data;
     const { data: urlData } = supabase.storage
       .from("public-images")
-      .getPublicUrl(imageFile.name);
-    
+      .getPublicUrl(image.name);
+
+    const formattedComments = commentsData.data?.map((comment: { id: string; text: string; username?: string; created_at: string; user_id: string }) => ({
+      id: comment.id,
+      text: comment.text,
+      username: comment.username || "Anonymous",
+      created_at: comment.created_at,
+      user_id: comment.user_id,
+    })) || [];
+
     return {
       imageUrl: urlData.publicUrl,
-      imageName: imageFile.name,
+      imageName: image.name,
+      likesCount: image.likes_count,
+      commentsCount: image.comments_count,
+      userLiked,
+      comments: formattedComments,
     };
   } catch (error) {
     console.error("Error fetching image:", error);
@@ -92,7 +115,7 @@ export default async function ImageDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { imageUrl, imageName } = imageData;
+  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments } = imageData;
 
-  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} />;
+  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} likesCount={likesCount} commentsCount={commentsCount} userLiked={userLiked} comments={comments} />;
 }
