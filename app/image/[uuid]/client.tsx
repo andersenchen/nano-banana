@@ -54,6 +54,17 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
     }
   }, [imageName]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        router.push('/');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
