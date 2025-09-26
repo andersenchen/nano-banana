@@ -1,10 +1,10 @@
 # Mememaker
 
-An AI-powered image transformation and meme creation platform built with Next.js 15, Supabase, and Google Gemini AI.
+An AI-powered image transformation and meme creation platform built with Next.js 15, Supabase, and Google's Nano Banana.
 
-🔗 **[Live Demo](https://nano-banana-nine.vercel.app/)**
+🔗 **Live Demo: [https://nano-banana-nine.vercel.app/](https://nano-banana-nine.vercel.app/)**
 
-![Mememaker](app/opengraph-image.png)
+![Mememaker Gallery](app/readme-image.png)
 
 ## Overview
 
