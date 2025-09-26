@@ -1,105 +1,274 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Mememaker
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+An AI-powered image transformation and meme creation platform built with Next.js 15, Supabase, and Google Gemini AI.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+🔗 **[Live Demo](https://nano-banana-nine.vercel.app/)**
+
+![Mememaker](app/opengraph-image.png)
+
+## Overview
+
+Mememaker is a modern web application that allows users to upload images and transform them using AI-powered text prompts. Users can create unique memes and image variations, share them with the community, and interact through likes and comments.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **AI-Powered Image Transformation** - Transform images using natural language prompts powered by Google Gemini 2.5 Flash
+- **User Authentication** - Secure authentication with password-based login and Google OAuth integration
+- **Image Upload** - Upload images up to 10MB with automatic storage in Supabase
+- **Public Gallery** - Browse all created images in a responsive grid layout
+- **Personal Collection** - View and manage your own creations in a dedicated page
+- **Social Interactions** - Like and comment on images from the community
+- **Theme Support** - Dark and light theme toggle with persistent preferences
+- **Real-time Updates** - Live authentication state and instant UI updates
 
-## Demo
+## Tech Stack
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- **Framework**: [Next.js 15](https://nextjs.org/) with App Router and React Server Components
+- **Language**: TypeScript
+- **UI Library**: React 19
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Backend**: [Supabase](https://supabase.com/) (Auth, Database, Storage)
+- **AI**: [Google Gemini AI](https://ai.google.dev/) (gemini-2.5-flash-image-preview model)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Linting**: [Biome](https://biomejs.dev/) + ESLint
 
-## Deploy to Vercel
+## Prerequisites
 
-Vercel deployment will guide you through creating a Supabase account and project.
+Before you begin, ensure you have:
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+- Node.js 20.x or later
+- npm, yarn, or pnpm
+- A [Supabase](https://supabase.com/) account and project
+- A [Google Cloud Console](https://console.cloud.google.com/) project with OAuth credentials
+- A [Google AI Studio](https://makersuite.google.com/app/apikey) API key for Gemini
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Installation
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
-
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+1. **Clone the repository**
 
    ```bash
-   yarn create next-app --example with-supabase with-supabase-app
+   git clone <your-repo-url>
+   cd nano-banana
    ```
+
+2. **Install dependencies**
 
    ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
+   npm install
    ```
 
-3. Use `cd` to change into the app's directory
+3. **Set up environment variables**
+
+   Copy the example environment file and fill in your credentials:
 
    ```bash
-   cd with-supabase-app
+   cp .env.example .env.local
    ```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+   Update `.env.local` with your credentials:
 
+   ```env
+   # Supabase Configuration
+   # Get these from: https://app.supabase.com/project/_/settings/api
+   NEXT_PUBLIC_SUPABASE_URL=your-project-url
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your-anon-key
+
+   # Google OAuth
+   # Get from: https://console.cloud.google.com/apis/credentials
+   NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+
+   # Google Gemini AI
+   # Get from: https://makersuite.google.com/app/apikey
+   GEMINI_API_KEY=your-gemini-api-key
    ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+4. **Set up Supabase**
 
-5. You can now run the Next.js local development server:
+   The project includes database migrations in `supabase/migrations/`. You can apply them using the Supabase CLI:
 
    ```bash
-   npm run dev
+   # Install Supabase CLI if you haven't already
+   npm install -g supabase
+
+   # Link to your project
+   supabase link --project-ref your-project-ref
+
+   # Run migrations
+   supabase db push
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+   Alternatively, run the SQL files manually in your Supabase SQL editor in this order:
+   - `20250919_create_storage_buckets.sql` - Creates storage buckets for images
+   - `20250925193000_create_images_table.sql` - Creates images table
+   - `20250925193100_create_likes_table.sql` - Creates likes table
+   - `20250925193200_create_comments_table.sql` - Creates comments table
+   - `20250925_create_user_images_view.sql` - Creates view for user images
+   - `20250926_backfill_existing_images.sql` - Backfills existing data
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+5. **Configure Google OAuth in Supabase**
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+   In your Supabase dashboard:
+   - Go to Authentication > Providers
+   - Enable Google provider
+   - Add your Google Client ID and Client Secret
+   - Add authorized redirect URIs in Google Console
 
-## Feedback and issues
+## Running the Application
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### Development Mode
 
-## More Supabase examples
+```bash
+npm run dev
+```
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+The app will be available at [http://localhost:3000](http://localhost:3000)
+
+The development server uses Turbopack for faster builds and hot module replacement.
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+## Project Structure
+
+```
+├── app/                      # Next.js App Router pages and layouts
+│   ├── api/                  # API routes
+│   │   ├── comments/         # Comments CRUD operations
+│   │   ├── images/           # Image listing and management
+│   │   ├── images-detail/    # Individual image details
+│   │   ├── likes/            # Like functionality
+│   │   ├── sync-images/      # Image sync operations
+│   │   └── transform-image/  # AI image transformation endpoint
+│   ├── auth/                 # Authentication pages
+│   │   ├── login/
+│   │   ├── sign-up/
+│   │   ├── forgot-password/
+│   │   └── update-password/
+│   ├── image/[uuid]/         # Individual image view page
+│   ├── my-creations/         # User's personal gallery
+│   ├── protected/            # Protected routes
+│   ├── layout.tsx            # Root layout
+│   └── page.tsx              # Home page with public gallery
+├── components/               # React components
+│   ├── auth-button.tsx       # Authentication button
+│   ├── google-signin-button.tsx  # Google OAuth button
+│   ├── image-grid.tsx        # Gallery grid component
+│   ├── image-transform.tsx   # Image transformation interface
+│   ├── image-upload-button.tsx   # Image upload modal
+│   ├── image-action-bar.tsx  # Like/comment actions
+│   ├── image-comments.tsx    # Comments display
+│   ├── image-sidebar.tsx     # Image details sidebar
+│   └── ui/                   # shadcn/ui components
+├── lib/                      # Utility functions and clients
+│   └── supabase/             # Supabase client configuration
+├── hooks/                    # Custom React hooks
+├── supabase/                 # Supabase configuration
+│   └── migrations/           # Database migrations
+├── types/                    # TypeScript type definitions
+└── middleware.ts             # Next.js middleware for auth
+```
+
+## Key Features Explained
+
+### AI Image Transformation
+
+The app uses Google's Gemini 2.5 Flash model with image capabilities to transform uploaded images based on text prompts. The transformation happens server-side in the `/api/transform-image` route:
+
+- Images are fetched and converted to base64
+- Sent to Gemini AI with user's text prompt
+- The transformed image is returned and automatically uploaded to Supabase storage
+- Maximum image size: 10MB
+
+### Database Schema
+
+**Images Table**
+- Stores image metadata (UUID, filename, URL, prompt, user_id)
+- Tracks creation timestamps
+- Connected to Supabase Storage
+
+**Likes Table**
+- Many-to-many relationship between users and images
+- Prevents duplicate likes per user
+- Includes timestamps
+
+**Comments Table**
+- Links users to images with their comments
+- Supports deletion and timestamps
+- Ordered by creation time
+
+### Authentication Flow
+
+- Password-based authentication using Supabase Auth
+- Google OAuth integration for one-click sign-in
+- Protected routes using Next.js middleware
+- Real-time auth state synchronization across the app
+
+### Storage
+
+Images are stored in Supabase Storage with two buckets:
+- `images` - Original uploaded images
+- `transformed-images` - AI-generated transformations
+
+## Development Tools
+
+- **Biome** - Fast linter and formatter for JavaScript/TypeScript
+- **ESLint** - Additional linting with Next.js recommended rules
+- **TypeScript** - Type safety across the entire codebase
+- **Tailwind CSS** - Utility-first CSS framework
+- **PostCSS** - CSS processing with autoprefixer
+
+## Deployment
+
+### Deploy to Vercel
+
+The easiest way to deploy this Next.js app is to use [Vercel](https://vercel.com):
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+1. Push your code to GitHub
+2. Import your repository in Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy!
+
+Vercel will automatically:
+- Build your Next.js application
+- Set up continuous deployment from your Git repository
+- Provide a production URL
+- Handle serverless functions for API routes
+
+### Environment Variables for Production
+
+Make sure to add all environment variables from `.env.local` to your production environment (Vercel, Railway, etc.)
+
+### Supabase Production Setup
+
+1. Ensure all migrations are applied to your production database
+2. Configure storage buckets with proper access policies
+3. Set up authentication providers in Supabase dashboard
+4. Add your production URLs to allowed redirect URLs
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Powered by [Supabase](https://supabase.com/)
+- AI capabilities by [Google Gemini](https://ai.google.dev/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
