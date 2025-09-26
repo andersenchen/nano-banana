@@ -33,7 +33,7 @@ export default function ImageModal() {
     handleCopy,
     handleCopyLink,
   } = useImageInteractions({
-    imageId: Array.isArray(params.uuid) ? params.uuid[0] : params.uuid,
+    imageId: (Array.isArray(params.uuid) ? params.uuid[0] : params.uuid) || '',
     imageUrl,
     initialLikesCount: likesCount,
     initialCommentsCount: commentsCount,

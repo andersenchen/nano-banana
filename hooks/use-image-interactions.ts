@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Comment } from "./use-image-fetch";
 
+export type { Comment };
+
 interface UseImageInteractionsProps {
   imageId: string;
   imageUrl?: string;
