@@ -20,6 +20,7 @@ interface UseImageFetchResult {
   comments: Comment[];
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 export function useImageFetch(uuid: string | string[] | undefined): UseImageFetchResult {
@@ -31,8 +32,7 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const supabase = createClient();
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
     async function fetchImage() {
@@ -44,8 +44,12 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
       try {
         const targetUuid = Array.isArray(uuid) ? uuid[0] : uuid;
 
-        const response = await fetch(`/api/images-detail?imageId=${targetUuid}`, {
-          cache: 'no-store'
+        const response = await fetch(`/api/images-detail?imageId=${targetUuid}&t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
         });
 
         if (!response.ok) {
@@ -71,7 +75,11 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
     }
 
     fetchImage();
-  }, [uuid, supabase]);
+  }, [uuid, refetchTrigger]);
+
+  const refetch = () => {
+    setRefetchTrigger(prev => prev + 1);
+  };
 
   return {
     imageUrl,
@@ -81,6 +89,7 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
     userLiked,
     comments,
     loading,
-    error
+    error,
+    refetch
   };
 }

@@ -18,11 +18,24 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data: storageObjects } = await supabase
       .from("user_storage_objects")
-      .select("id, name, created_at")
+      .select("name")
       .eq("bucket_id", bucketName)
-      .eq("owner", user.id)
+      .eq("owner", user.id);
+
+    if (!storageObjects || storageObjects.length === 0) {
+      return Response.json({ images: [], hasMore: false });
+    }
+
+    const userImageNames = storageObjects
+      .filter((file) => /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
+      .map((file) => file.name);
+
+    const { data: images, error } = await supabase
+      .from("images")
+      .select("id, name, likes_count, comments_count, created_at")
+      .in("name", userImageNames)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -31,26 +44,34 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
-    if (!data) {
+    if (!images) {
       return Response.json({ images: [], hasMore: false });
     }
 
-    const imageFiles = data.filter((file) =>
-      /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-    );
+    const { data: likes } = await supabase
+      .from("likes")
+      .select("image_id")
+      .eq("user_id", user.id)
+      .in("image_id", images.map(img => img.id));
 
-    const imageData = imageFiles.map((file) => {
+    const userLikes = new Set(likes?.map(like => like.image_id) || []);
+
+    const imageData = images.map((image) => {
       const { data: urlData } = supabase.storage
         .from(bucketName)
-        .getPublicUrl(file.name);
+        .getPublicUrl(image.name);
+
       return {
-        id: file.id,
-        name: file.name,
-        url: urlData.publicUrl
+        id: image.id,
+        name: image.name,
+        url: urlData.publicUrl,
+        likesCount: image.likes_count,
+        commentsCount: image.comments_count,
+        userLiked: userLikes.has(image.id),
       };
     });
 
-    const hasMore = data.length === limit;
+    const hasMore = images.length === limit;
 
     return Response.json({
       images: imageData,

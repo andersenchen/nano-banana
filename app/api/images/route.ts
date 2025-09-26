@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     const { data: images, error } = await supabase
       .from("images")
@@ -26,6 +27,19 @@ export async function GET(request: NextRequest) {
       return Response.json({ images: [], hasMore: false });
     }
 
+    let userLikes: Set<string> = new Set();
+    if (user) {
+      const { data: likes } = await supabase
+        .from("likes")
+        .select("image_id")
+        .eq("user_id", user.id)
+        .in("image_id", images.map(img => img.id));
+
+      if (likes) {
+        userLikes = new Set(likes.map(like => like.image_id));
+      }
+    }
+
     const imageData = images.map((image) => {
       const { data: urlData } = supabase.storage
         .from(bucketName)
@@ -37,6 +51,7 @@ export async function GET(request: NextRequest) {
         url: urlData.publicUrl,
         likesCount: image.likes_count,
         commentsCount: image.comments_count,
+        userLiked: userLikes.has(image.id),
       };
     });
 
