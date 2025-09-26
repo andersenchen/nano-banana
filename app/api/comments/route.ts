@@ -45,13 +45,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "imageId and text are required" }, { status: 400 });
     }
 
-    const { data: userData } = await supabase
-      .from("users")
-      .select("username, email")
-      .eq("id", user.id)
-      .single();
-
-    const username = userData?.username || user.email?.split("@")[0] || "Anonymous";
+    const username = user.email?.split("@")[0] || "Anonymous";
 
     const { data: comment, error } = await supabase
       .from("comments")

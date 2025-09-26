@@ -76,7 +76,6 @@ export function useImageInteractions({
     };
 
     setComments(prev => [tempComment, ...prev]);
-    setNewComment("");
 
     try {
       const res = await fetch("/api/comments", {
@@ -85,10 +84,13 @@ export function useImageInteractions({
         body: JSON.stringify({ imageId, text: newComment }),
       });
 
+      if (!res.ok) throw new Error("Failed to post comment");
+
       const data = await res.json();
       setComments(prev =>
         prev.map(c => c.id === tempComment.id ? data.comment : c)
       );
+      setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
       setComments(prev => prev.filter(c => c.id !== tempComment.id));
