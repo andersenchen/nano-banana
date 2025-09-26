@@ -85,7 +85,7 @@ Before you begin, ensure you have:
 
 4. **Set up Supabase**
 
-   The project includes database migrations in `supabase/migrations/`. You can apply them using the Supabase CLI:
+   The project includes database migrations in `supabase/migrations/`. Apply them using the Supabase CLI:
 
    ```bash
    # Install Supabase CLI if you haven't already
@@ -97,14 +97,6 @@ Before you begin, ensure you have:
    # Run migrations
    supabase db push
    ```
-
-   Alternatively, run the SQL files manually in your Supabase SQL editor in this order:
-   - `20250919_create_storage_buckets.sql` - Creates storage buckets for images
-   - `20250925193000_create_images_table.sql` - Creates images table
-   - `20250925193100_create_likes_table.sql` - Creates likes table
-   - `20250925193200_create_comments_table.sql` - Creates comments table
-   - `20250925_create_user_images_view.sql` - Creates view for user images
-   - `20250926_backfill_existing_images.sql` - Backfills existing data
 
 5. **Configure Google OAuth in Supabase**
 
@@ -139,94 +131,11 @@ npm start
 npm run lint
 ```
 
-## Project Structure
-
-```
-├── app/                      # Next.js App Router pages and layouts
-│   ├── api/                  # API routes
-│   │   ├── comments/         # Comments CRUD operations
-│   │   ├── images/           # Image listing and management
-│   │   ├── images-detail/    # Individual image details
-│   │   ├── likes/            # Like functionality
-│   │   ├── sync-images/      # Image sync operations
-│   │   └── transform-image/  # AI image transformation endpoint
-│   ├── auth/                 # Authentication pages
-│   │   ├── login/
-│   │   ├── sign-up/
-│   │   ├── forgot-password/
-│   │   └── update-password/
-│   ├── image/[uuid]/         # Individual image view page
-│   ├── my-creations/         # User's personal gallery
-│   ├── protected/            # Protected routes
-│   ├── layout.tsx            # Root layout
-│   └── page.tsx              # Home page with public gallery
-├── components/               # React components
-│   ├── auth-button.tsx       # Authentication button
-│   ├── google-signin-button.tsx  # Google OAuth button
-│   ├── image-grid.tsx        # Gallery grid component
-│   ├── image-transform.tsx   # Image transformation interface
-│   ├── image-upload-button.tsx   # Image upload modal
-│   ├── image-action-bar.tsx  # Like/comment actions
-│   ├── image-comments.tsx    # Comments display
-│   ├── image-sidebar.tsx     # Image details sidebar
-│   └── ui/                   # shadcn/ui components
-├── lib/                      # Utility functions and clients
-│   └── supabase/             # Supabase client configuration
-├── hooks/                    # Custom React hooks
-├── supabase/                 # Supabase configuration
-│   └── migrations/           # Database migrations
-├── types/                    # TypeScript type definitions
-└── middleware.ts             # Next.js middleware for auth
-```
-
-## Key Features Explained
+## How It Works
 
 ### AI Image Transformation
 
-The app uses Google's Gemini 2.5 Flash model with image capabilities to transform uploaded images based on text prompts. The transformation happens server-side in the `/api/transform-image` route:
-
-- Images are fetched and converted to base64
-- Sent to Gemini AI with user's text prompt
-- The transformed image is returned and automatically uploaded to Supabase storage
-- Maximum image size: 10MB
-
-### Database Schema
-
-**Images Table**
-- Stores image metadata (UUID, filename, URL, prompt, user_id)
-- Tracks creation timestamps
-- Connected to Supabase Storage
-
-**Likes Table**
-- Many-to-many relationship between users and images
-- Prevents duplicate likes per user
-- Includes timestamps
-
-**Comments Table**
-- Links users to images with their comments
-- Supports deletion and timestamps
-- Ordered by creation time
-
-### Authentication Flow
-
-- Password-based authentication using Supabase Auth
-- Google OAuth integration for one-click sign-in
-- Protected routes using Next.js middleware
-- Real-time auth state synchronization across the app
-
-### Storage
-
-Images are stored in Supabase Storage with two buckets:
-- `images` - Original uploaded images
-- `transformed-images` - AI-generated transformations
-
-## Development Tools
-
-- **Biome** - Fast linter and formatter for JavaScript/TypeScript
-- **ESLint** - Additional linting with Next.js recommended rules
-- **TypeScript** - Type safety across the entire codebase
-- **Tailwind CSS** - Utility-first CSS framework
-- **PostCSS** - CSS processing with autoprefixer
+The app uses Google's Nano Banana (Gemini 2.5 Flash) with image capabilities to transform uploaded images based on text prompts. Images are processed server-side and automatically saved to your gallery.
 
 ## Deployment
 
