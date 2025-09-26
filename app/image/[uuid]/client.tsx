@@ -7,15 +7,27 @@ import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
 
+interface Comment {
+  id: string;
+  text: string;
+  username: string;
+  created_at: string;
+  user_id: string;
+}
+
 interface ImageDetailClientProps {
   uuid: string;
   imageUrl: string;
   imageName: string;
+  likesCount: number;
+  commentsCount: number;
+  userLiked: boolean;
+  comments: Comment[];
 }
 
-export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailClientProps) {
+export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCount, commentsCount, userLiked, comments: initialComments }: ImageDetailClientProps) {
   const router = useRouter();
-  
+
   const {
     liked,
     likeCount,
@@ -27,7 +39,14 @@ export default function ImageDetailClient({ imageUrl, imageName }: ImageDetailCl
     handleShare,
     handleCopy,
     handleCopyLink,
-  } = useImageInteractions(imageUrl);
+  } = useImageInteractions({
+    imageId: uuid,
+    imageUrl,
+    initialLikesCount: likesCount,
+    initialCommentsCount: commentsCount,
+    initialUserLiked: userLiked,
+    initialComments,
+  });
 
   useEffect(() => {
     if (imageName) {

@@ -1,56 +1,96 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Comment } from "./use-image-fetch";
 
-export interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  createdAt: string;
+interface UseImageInteractionsProps {
+  imageId: string;
+  imageUrl?: string;
+  initialLikesCount?: number;
+  initialCommentsCount?: number;
+  initialUserLiked?: boolean;
+  initialComments?: Comment[];
 }
 
-export function useImageInteractions(imageUrl?: string) {
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(1234);
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: "1",
-      text: "Amazing work! Love the composition 🔥",
-      author: "user1",
-      createdAt: "2h ago"
-    },
-    {
-      id: "2", 
-      text: "This is so inspiring! How did you create this?",
-      author: "creator_jane",
-      createdAt: "5h ago"
-    }
-  ]);
+export function useImageInteractions({
+  imageId,
+  imageUrl,
+  initialLikesCount = 0,
+  initialUserLiked = false,
+  initialComments = [],
+}: UseImageInteractionsProps) {
+  const [liked, setLiked] = useState(initialUserLiked);
+  const [likeCount, setLikeCount] = useState(initialLikesCount);
+  const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+  useEffect(() => {
+    setLiked(initialUserLiked);
+  }, [initialUserLiked]);
+
+  useEffect(() => {
+    setLikeCount(initialLikesCount);
+  }, [initialLikesCount]);
+
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
+
+  const handleLike = async () => {
+    const wasLiked = liked;
+    const previousCount = likeCount;
+
+    setLiked(!wasLiked);
+    setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
+
+    try {
+      const res = await fetch("/api/likes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageId }),
+      });
+
+      const data = await res.json();
+      setLiked(data.liked);
+      setLikeCount(data.likeCount);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      setLiked(wasLiked);
+      setLikeCount(previousCount);
+    }
   };
 
-  const handleBookmark = () => {
-    setBookmarked(!bookmarked);
-  };
-
-  const handleComment = (e: React.FormEvent) => {
+  const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
-    const comment: Comment = {
-      id: Date.now().toString(),
+    const tempComment: Comment = {
+      id: `temp-${Date.now()}`,
       text: newComment,
-      author: "You",
-      createdAt: "now"
+      username: "You",
+      created_at: new Date().toISOString(),
+      user_id: "temp",
     };
 
-    setComments(prev => [comment, ...prev]);
+    setComments(prev => [tempComment, ...prev]);
     setNewComment("");
+
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageId, text: newComment }),
+      });
+
+      const data = await res.json();
+      setComments(prev =>
+        prev.map(c => c.id === tempComment.id ? data.comment : c)
+      );
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      setComments(prev => prev.filter(c => c.id !== tempComment.id));
+    }
   };
 
   const handleBanana = () => {
@@ -113,6 +153,7 @@ export function useImageInteractions(imageUrl?: string) {
     likeCount,
     comments,
     newComment,
+    loading,
     setNewComment,
     handleLike,
     handleComment,

@@ -16,9 +16,9 @@ export default function ImageModal() {
   const router = useRouter();
   const pathname = usePathname();
   
-  const { imageUrl, imageName, loading } = useImageFetch(params.uuid);
+  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments: fetchedComments, loading } = useImageFetch(params.uuid);
   const { allImages, currentImageIndex, handlePrevious, handleNext } = useImageGallery(params.uuid);
-  
+
   const {
     liked,
     likeCount,
@@ -30,7 +30,14 @@ export default function ImageModal() {
     handleShare,
     handleCopy,
     handleCopyLink,
-  } = useImageInteractions(imageUrl);
+  } = useImageInteractions({
+    imageId: Array.isArray(params.uuid) ? params.uuid[0] : params.uuid,
+    imageUrl,
+    initialLikesCount: likesCount,
+    initialCommentsCount: commentsCount,
+    initialUserLiked: userLiked,
+    initialComments: fetchedComments,
+  });
 
   const handleClose = useCallback(() => {
     router.push('/');

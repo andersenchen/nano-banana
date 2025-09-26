@@ -14,6 +14,8 @@ interface ImageFile {
   id: string;
   name: string;
   url: string;
+  likesCount: number;
+  commentsCount: number;
 }
 
 export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
@@ -181,7 +183,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
             />
             <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/30 rounded-full px-2 py-1 backdrop-blur-sm">
               <Heart className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs font-medium">42</span>
+              <span className="text-white text-xs font-medium">{image.likesCount}</span>
             </div>
           </Link>
         ))}

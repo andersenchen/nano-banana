@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 interface ImageData {
   id: string;
@@ -21,35 +20,26 @@ export function useImageGallery(currentUuid: string | string[] | undefined): Use
   const [allImages, setAllImages] = useState<ImageData[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     async function fetchAllImages() {
       if (!currentUuid) return;
-      
+
       try {
-        const { data, error } = await supabase.storage
-          .from("public-images")
-          .list("", { 
-            limit: 100,
-            sortBy: { column: "created_at", order: "desc" }
-          });
+        const response = await fetch('/api/images?page=1&limit=100');
+        const data = await response.json();
 
-        if (error) throw error;
+        if (data.error) throw new Error(data.error);
 
-        const imageFiles = data?.filter(file => 
-          /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
-        ) || [];
-
-        const imageData = imageFiles.map(file => ({
-          id: file.id,
-          name: file.name
+        const imageData = data.images.map((img: any) => ({
+          id: img.id,
+          name: img.name
         }));
-        
+
         setAllImages(imageData);
-        
+
         const targetUuid = Array.isArray(currentUuid) ? currentUuid[0] : currentUuid;
-        const currentIndex = imageData.findIndex(img => img.id === targetUuid);
+        const currentIndex = imageData.findIndex((img: ImageData) => img.id === targetUuid);
         setCurrentImageIndex(currentIndex !== -1 ? currentIndex : 0);
       } catch (error) {
         console.error("Error fetching gallery images:", error);
@@ -57,7 +47,7 @@ export function useImageGallery(currentUuid: string | string[] | undefined): Use
     }
 
     fetchAllImages();
-  }, [currentUuid, supabase.storage]);
+  }, [currentUuid]);
 
   const navigateToImage = (index: number) => {
     if (index >= 0 && index < allImages.length) {
