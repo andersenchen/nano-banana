@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { ImageRefreshProvider } from "@/lib/image-refresh-context";
+import { FullStoryIdentity } from "@/components/fullstory-identity";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -76,6 +77,7 @@ f="XMLHttpRequest",g._w={},g._w[f]=m[f],g._w[s]=m[s],m[s]&&(m[s]=function(){retu
           disableTransitionOnChange
         >
           <ImageRefreshProvider>
+            <FullStoryIdentity />
             {children}
             {modal}
           </ImageRefreshProvider>
