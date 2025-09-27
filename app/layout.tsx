@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "next-themes";
 import { ImageRefreshProvider } from "@/lib/image-refresh-context";
 import { FullStoryInit } from "@/components/fullstory-init";
@@ -47,6 +48,7 @@ export default function RootLayout({
           </ImageRefreshProvider>
         </ThemeProvider>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+        <Analytics />
       </body>
     </html>
   );
