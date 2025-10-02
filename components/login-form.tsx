@@ -19,7 +19,7 @@ import { GoogleSignInButton } from "./google-signin-button";
 
 export function LoginForm({
   className,
-  redirectUrl = "/notes",
+  redirectUrl = "/",
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & {
   redirectUrl?: string;

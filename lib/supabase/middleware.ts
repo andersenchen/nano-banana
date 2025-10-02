@@ -47,15 +47,13 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    !request.nextUrl.pathname.startsWith("/image") &&
-    !request.nextUrl.pathname.startsWith("/api/images")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // Protected routes - only redirect if user is not authenticated and trying to access these
+  const protectedPaths = ['/my-creations'];
+  const isProtectedPath = protectedPaths.some(path =>
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  if (!user && isProtectedPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);

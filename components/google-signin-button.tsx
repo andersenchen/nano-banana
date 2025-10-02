@@ -11,10 +11,10 @@ interface GoogleSignInButtonProps {
   shape?: "rectangular" | "pill" | "circle" | "square";
 }
 
-export function GoogleSignInButton({ 
-  redirectUrl = "/notes",
+export function GoogleSignInButton({
+  redirectUrl = "/",
   text = "signin_with",
-  theme = "outline", 
+  theme = "outline",
   size = "large",
   shape = "pill"
 }: GoogleSignInButtonProps) {
