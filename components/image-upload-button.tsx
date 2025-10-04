@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, X } from "lucide-react";
-import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
+import { uploadImageToSupabase, type VisibilityType } from "@/lib/supabase/upload-image";
 import { useImageRefresh } from "@/lib/image-refresh-context";
+import { VisibilitySelector } from "@/components/visibility-selector";
 
 interface StagedFile {
   file: File;
@@ -19,6 +20,7 @@ export function ImageUploadButton() {
   const [isDragging, setIsDragging] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<VisibilityType>("public");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
   const { triggerRefresh } = useImageRefresh();
@@ -62,7 +64,7 @@ export function ImageUploadButton() {
     for (const stagedFile of filesToUpload) {
       try {
         const base64Data = stagedFile.preview.split(",")[1];
-        const result = await uploadImageToSupabase(base64Data, stagedFile.file.type);
+        const result = await uploadImageToSupabase(base64Data, stagedFile.file.type, visibility);
 
         if (result.success) {
           setUploadingFiles(prev => prev.filter(id => id !== stagedFile.id));
@@ -85,61 +87,13 @@ export function ImageUploadButton() {
     setStagedFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const directUploadFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
-      return;
-    }
-
-    // Check file size (10MB limit)
-    const MAX_SIZE_MB = 10;
-    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-    if (file.size > MAX_SIZE_BYTES) {
-      alert(`${file.name} exceeds ${MAX_SIZE_MB}MB size limit`);
-      return;
-    }
-
-    const fileName = file.name;
-    setUploadingFiles(prev => [...prev, fileName]);
-    setUploading(true);
-
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
-        const base64Data = base64.split(",")[1];
-
-        const result = await uploadImageToSupabase(base64Data, file.type);
-
-        if (result.success) {
-          triggerRefresh();
-        } else {
-          alert(`Upload failed for ${fileName}: ${result.error}`);
-        }
-
-        setUploadingFiles(prev => prev.filter(name => name !== fileName));
-        if (uploadingFiles.length <= 1) {
-          setUploading(false);
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert(`Failed to upload ${fileName}`);
-      setUploadingFiles(prev => prev.filter(name => name !== fileName));
-      if (uploadingFiles.length <= 1) {
-        setUploading(false);
-      }
-    }
-  };
-
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
-    // Direct upload for button clicks
+    // Use staging area for button clicks to show visibility selector
     for (let i = 0; i < files.length; i++) {
-      directUploadFile(files[i]);
+      stageFile(files[i]);
     }
 
     if (fileInputRef.current) {
@@ -259,7 +213,7 @@ export function ImageUploadButton() {
               </button>
             </div>
 
-            <div className="grid grid-cols-4 md:grid-cols-5 gap-3 max-h-[400px] overflow-y-auto mb-6 p-2">
+            <div className="grid grid-cols-4 md:grid-cols-5 gap-3 max-h-[400px] overflow-y-auto mb-4 p-2">
               {stagedFiles.map((file) => (
                 <div key={file.id} className="relative group">
                   <Image
@@ -280,6 +234,17 @@ export function ImageUploadButton() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Visibility
+              </label>
+              <VisibilitySelector
+                value={visibility}
+                onChange={setVisibility}
+                disabled={uploading}
+              />
             </div>
 
             <div className="flex gap-3">

@@ -12,10 +12,15 @@ interface ImageSidebarProps {
   newComment: string;
   showShare?: boolean;
   imageUrl?: string;
+  imageId?: string;
+  visibility?: 'public' | 'unlisted' | 'private';
+  isOwner?: boolean;
   onLike: () => void;
   onShare?: () => void;
   onCopy?: () => void;
   onCopyLink?: () => void;
+  onVisibilityChange?: (visibility: 'public' | 'unlisted' | 'private') => void;
+  onDelete?: () => void;
   onCommentChange: (value: string) => void;
   onCommentSubmit: (e: React.FormEvent) => void;
   className?: string;
@@ -29,10 +34,15 @@ export default function ImageSidebar({
   newComment,
   showShare = true,
   imageUrl,
+  imageId,
+  visibility,
+  isOwner,
   onLike,
   onShare,
   onCopy,
   onCopyLink,
+  onVisibilityChange,
+  onDelete,
   onCommentChange,
   onCommentSubmit,
   className = "lg:col-span-1 bg-white dark:bg-background flex flex-col border-l lg:border-l border-border h-full"
@@ -49,10 +59,15 @@ export default function ImageSidebar({
         liked={liked}
         likeCount={likeCount}
         showShare={showShare}
+        imageId={imageId}
+        visibility={visibility}
+        isOwner={isOwner}
         onLike={onLike}
         onShare={onShare}
         onCopy={onCopy}
         onCopyLink={onCopyLink}
+        onVisibilityChange={onVisibilityChange}
+        onDelete={onDelete}
       />
 
       {/* Tab Toggle */}
@@ -91,7 +106,7 @@ export default function ImageSidebar({
       <div className="flex-1 min-h-0">
         {activeTab === 'transform' ? (
           <div className="h-full overflow-y-auto">
-            <ImageTransform key="transform" imageUrl={imageUrl} />
+            <ImageTransform key="transform" imageUrl={imageUrl} imageId={imageId} currentVisibility={visibility} isOwner={isOwner} />
           </div>
         ) : (
           <ImageComments

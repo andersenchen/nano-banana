@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const { data: images, error } = await supabase
       .from("images")
       .select("id, name, likes_count, comments_count, created_at")
+      .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 

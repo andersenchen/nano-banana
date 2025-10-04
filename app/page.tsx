@@ -1,71 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { AuthButtonClient } from "@/components/auth-button-client";
-import { EnvVarWarning } from "@/components/env-var-warning";
 import { ImageGrid } from "@/components/image-grid";
-import { ImageUploadButton } from "@/components/image-upload-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { MememakerLogoMinimal } from "@/components/mememaker-logo";
-import { hasEnvVars } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
-import Link from "next/link";
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-inter",
-});
+import { Header } from "@/components/header";
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    checkUser();
-
-    const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   return (
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-8 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"} className="flex items-center gap-2">
-                <MememakerLogoMinimal className="w-10 h-8" />
-                <span className={`font-bold text-xl tracking-tight ${inter.className}`}>mememaker</span>
-              </Link>
-              {user && (
-                <>
-                  <Link
-                    href="/my-creations"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    My Creations
-                  </Link>
-                  <ImageUploadButton />
-                </>
-              )}
-            </div>
-            <div className="flex gap-3 items-center">
-              {!hasEnvVars ? <EnvVarWarning /> : <AuthButtonClient />}
-            </div>
-          </div>
-        </nav>
+        <Header activePage="explore" />
         <ImageGrid />
 
         <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">

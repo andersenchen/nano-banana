@@ -6,15 +6,19 @@ import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
-import { uploadImageToSupabase } from "@/lib/supabase/upload-image";
+import { uploadImageToSupabase, type VisibilityType } from "@/lib/supabase/upload-image";
 import { useImageRefresh } from "@/lib/image-refresh-context";
 import { transformPrompts } from "@/lib/transform-prompts";
 import { LoginModal } from "./login-modal";
 import TransformLoadingProgress from "./transform-loading-progress";
+import { VisibilitySelector } from "@/components/visibility-selector";
 
 interface ImageTransformProps {
   className?: string;
   imageUrl?: string;
+  imageId?: string;
+  currentVisibility?: 'public' | 'unlisted' | 'private';
+  isOwner?: boolean;
   onTransformComplete?: (newImageId: string) => void;
 }
 
@@ -30,6 +34,7 @@ export default function ImageTransform({
   const [user, setUser] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [visibility, setVisibility] = useState<VisibilityType>("public");
   const { triggerRefresh } = useImageRefresh();
   const [pendingTransform, setPendingTransform] = useState<{ prompt: string; imageUrl: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -142,7 +147,6 @@ export default function ImageTransform({
     setError("Transformation cancelled");
   };
 
-
   const handleTransform = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
@@ -222,9 +226,9 @@ export default function ImageTransform({
       }
 
       const { imageData, mimeType } = await response.json();
-      
-      const uploadResult = await uploadImageToSupabase(imageData, mimeType);
-      
+
+      const uploadResult = await uploadImageToSupabase(imageData, mimeType, visibility);
+
       if (!uploadResult.success) {
         throw new Error(uploadResult.error || 'Failed to save transformed image');
       }
@@ -320,7 +324,16 @@ export default function ImageTransform({
           className="min-h-[60px] resize-none"
           disabled={isTransforming}
         />
-        
+
+        <div>
+          <VisibilitySelector
+            value={visibility}
+            onChange={setVisibility}
+            disabled={isTransforming}
+            label="Visibility for transformed image"
+          />
+        </div>
+
         <div className="flex justify-end">
           <Button
             type="submit"

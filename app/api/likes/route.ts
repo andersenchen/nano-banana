@@ -15,15 +15,17 @@ export async function GET(request: NextRequest) {
 
     const { data: image, error: imageError } = await supabase
       .from("images")
-      .select("likes_count")
+      .select("likes_count, visibility, user_id")
       .eq("id", imageId)
       .single();
 
-    if (imageError) {
-      return Response.json({
-        likeCount: 0,
-        userLiked: false
-      });
+    if (imageError || !image) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
+    }
+
+    // Check visibility permissions
+    if (image.visibility === "private" && (!user || user.id !== image.user_id)) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
     }
 
     let userLiked = false;
@@ -64,6 +66,22 @@ export async function POST(request: NextRequest) {
 
     if (!imageId) {
       return Response.json({ error: "imageId is required" }, { status: 400 });
+    }
+
+    // Check if image exists and user can access it
+    const { data: image, error: imageError } = await supabase
+      .from("images")
+      .select("id, visibility, user_id")
+      .eq("id", imageId)
+      .single();
+
+    if (imageError || !image) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
+    }
+
+    // Check visibility permissions - can't like private images unless you own them
+    if (image.visibility === "private" && user.id !== image.user_id) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
     }
 
     const { data: existingLike } = await supabase

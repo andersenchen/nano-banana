@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, usePathname } from "next/navigation";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ImageDisplay from "@/components/image-display";
@@ -18,8 +18,9 @@ export default function ImageModal() {
   const pathname = usePathname();
   const { triggerRefresh } = useImageRefresh();
 
-  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments: fetchedComments, loading } = useImageFetch(params.uuid);
+  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments: fetchedComments, visibility, isOwner, loading } = useImageFetch(params.uuid);
   const { allImages, currentImageIndex, handlePrevious, handleNext } = useImageGallery(params.uuid);
+  const [imageVisibility, setImageVisibility] = useState(visibility);
 
   const {
     liked,
@@ -41,11 +42,75 @@ export default function ImageModal() {
     initialComments: fetchedComments,
   });
 
+  useEffect(() => {
+    setImageVisibility(visibility);
+  }, [visibility]);
+
+  const handleVisibilityChange = async (newVisibility: 'public' | 'unlisted' | 'private') => {
+    if (!isOwner) return;
+
+    const previousVisibility = imageVisibility;
+    setImageVisibility(newVisibility);
+
+    try {
+      const response = await fetch('/api/update-visibility', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageId: (Array.isArray(params.uuid) ? params.uuid[0] : params.uuid),
+          visibility: newVisibility,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update visibility');
+      }
+
+      triggerRefresh();
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+      setImageVisibility(previousVisibility);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!isOwner) return;
+
+    if (!confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/delete-image', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageId: (Array.isArray(params.uuid) ? params.uuid[0] : params.uuid),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete image');
+      }
+
+      triggerRefresh();
+      router.push('/');
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Failed to delete image. Please try again.');
+    }
+  };
+
   const handleClose = useCallback(() => {
     if (liked !== userLiked) {
       triggerRefresh();
     }
     router.push('/');
+    router.refresh(); // Clear Next.js router cache
   }, [router, liked, userLiked, triggerRefresh]);
 
   // Keyboard navigation for Escape key (arrow keys handled in useImageGallery)
@@ -125,10 +190,15 @@ export default function ImageModal() {
             newComment={newComment}
             showShare={true}
             imageUrl={imageUrl}
+            imageId={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid}
+            visibility={imageVisibility}
+            isOwner={isOwner}
             onLike={handleLike}
             onShare={handleShare}
             onCopy={handleCopy}
             onCopyLink={handleCopyLink}
+            onVisibilityChange={handleVisibilityChange}
+            onDelete={handleDelete}
             onCommentChange={setNewComment}
             onCommentSubmit={handleComment}
             className="lg:col-span-1 bg-white dark:bg-background flex flex-col border-t lg:border-t-0 lg:border-l border-border min-h-[40vh] lg:h-full lg:overflow-y-auto"

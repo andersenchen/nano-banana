@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useImageRefresh } from "@/lib/image-refresh-context";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,6 +34,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastImageRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
   const { refreshKey } = useImageRefresh();
 
   const fetchImages = useCallback(async (pageNum: number, isLoadMore = false) => {
@@ -100,23 +102,11 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
   useEffect(() => {
     if (!authChecked) return;
 
-    if (refreshKey > 0) {
-      setPage(1);
-      fetch(`/api/images?page=1&limit=20&bucket=${bucketName}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.images) {
-            setImages(data.images);
-            setHasMore(data.hasMore);
-          }
-        })
-        .catch(err => {
-          console.error("Error refreshing images:", err);
-        });
-    } else {
-      fetchImages(1);
-    }
-  }, [authChecked, refreshKey, bucketName, fetchImages, userId]);
+    // Reset and refetch when pathname changes (navigation) or refreshKey changes
+    setPage(1);
+    setLoading(true);
+    fetchImages(1);
+  }, [authChecked, refreshKey, bucketName, fetchImages, userId, pathname]);
 
   useEffect(() => {
     if (observerRef.current) {

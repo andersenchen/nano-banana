@@ -11,10 +11,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     const { data: image, error } = await supabase
       .from("images")
-      .select("id, name, likes_count, comments_count")
+      .select("id, name, likes_count, comments_count, visibility, user_id")
       .eq("id", imageId)
       .single();
 
@@ -22,11 +23,15 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Image not found" }, { status: 404 });
     }
 
+    // Check visibility permissions
+    // Private images can only be viewed by the owner
+    if (image.visibility === "private" && (!user || user.id !== image.user_id)) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
+    }
+
     const { data: urlData } = supabase.storage
       .from("public-images")
       .getPublicUrl(image.name);
-
-    const { data: { user } } = await supabase.auth.getUser();
 
     const [likeData, commentsData] = await Promise.all([
       user ? supabase
@@ -59,6 +64,8 @@ export async function GET(request: NextRequest) {
         likes_count: image.likes_count,
         comments_count: image.comments_count,
         user_liked: userLiked,
+        visibility: image.visibility,
+        is_owner: user?.id === image.user_id,
       },
       comments: formattedComments,
     });

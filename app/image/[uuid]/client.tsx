@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { ArrowLeft, Share } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
+import { useImageRefresh } from "@/lib/image-refresh-context";
 
 interface Comment {
   id: string;
@@ -23,10 +24,14 @@ interface ImageDetailClientProps {
   commentsCount: number;
   userLiked: boolean;
   comments: Comment[];
+  visibility: 'public' | 'unlisted' | 'private';
+  isOwner: boolean;
 }
 
-export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCount, commentsCount, userLiked, comments: initialComments }: ImageDetailClientProps) {
+export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCount, commentsCount, userLiked, comments: initialComments, visibility, isOwner }: ImageDetailClientProps) {
   const router = useRouter();
+  const { triggerRefresh } = useImageRefresh();
+  const [imageVisibility, setImageVisibility] = useState(visibility);
 
   const {
     liked,
@@ -47,6 +52,65 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
     initialUserLiked: userLiked,
     initialComments,
   });
+
+  const handleVisibilityChange = async (newVisibility: 'public' | 'unlisted' | 'private') => {
+    if (!isOwner) return;
+
+    const previousVisibility = imageVisibility;
+    setImageVisibility(newVisibility);
+
+    try {
+      const response = await fetch('/api/update-visibility', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageId: uuid,
+          visibility: newVisibility,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update visibility');
+      }
+
+      triggerRefresh();
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+      setImageVisibility(previousVisibility);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!isOwner) return;
+
+    if (!confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/delete-image', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageId: uuid,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete image');
+      }
+
+      triggerRefresh();
+      router.push('/');
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Failed to delete image. Please try again.');
+    }
+  };
 
   useEffect(() => {
     if (imageName) {
@@ -81,12 +145,7 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
             </span>
           </button>
           <h1 className="text-lg font-semibold">{imageName || "Image"}</h1>
-          <button
-            onClick={handleShare}
-            className="p-2 hover:bg-accent rounded-full transition-colors"
-          >
-            <Share className="h-5 w-5" />
-          </button>
+          <div className="w-10"></div>
         </div>
       </header>
 
@@ -106,11 +165,17 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
           likeCount={likeCount}
           comments={comments}
           newComment={newComment}
-          showShare={false}
+          showShare={true}
           imageUrl={imageUrl}
+          imageId={uuid}
+          visibility={imageVisibility}
+          isOwner={isOwner}
           onLike={handleLike}
+          onShare={handleShare}
           onCopy={handleCopy}
           onCopyLink={handleCopyLink}
+          onVisibilityChange={handleVisibilityChange}
+          onDelete={handleDelete}
           onCommentChange={setNewComment}
           onCommentSubmit={handleComment}
           className="lg:col-span-1 flex flex-col border-l border-border lg:border-l-0"

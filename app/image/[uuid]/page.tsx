@@ -16,7 +16,7 @@ async function getImageData(uuid: string) {
   try {
     const { data: image, error } = await supabase
       .from("images")
-      .select("id, name, likes_count, comments_count")
+      .select("id, name, likes_count, comments_count, visibility, user_id")
       .eq("id", uuid)
       .single();
 
@@ -60,6 +60,8 @@ async function getImageData(uuid: string) {
       commentsCount: image.comments_count,
       userLiked,
       comments: formattedComments,
+      visibility: image.visibility,
+      isOwner: user?.id === image.user_id,
     };
   } catch (error) {
     console.error("Error fetching image:", error);
@@ -115,7 +117,7 @@ export default async function ImageDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments } = imageData;
+  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments, visibility, isOwner } = imageData;
 
-  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} likesCount={likesCount} commentsCount={commentsCount} userLiked={userLiked} comments={comments} />;
+  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} likesCount={likesCount} commentsCount={commentsCount} userLiked={userLiked} comments={comments} visibility={visibility} isOwner={isOwner} />;
 }
