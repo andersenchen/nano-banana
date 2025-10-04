@@ -16,9 +16,6 @@ import { VisibilitySelector } from "@/components/visibility-selector";
 interface ImageTransformProps {
   className?: string;
   imageUrl?: string;
-  imageId?: string;
-  currentVisibility?: 'public' | 'unlisted' | 'private';
-  isOwner?: boolean;
   onTransformComplete?: (newImageId: string) => void;
 }
 

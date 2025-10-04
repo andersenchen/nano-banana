@@ -113,7 +113,6 @@ export default function ImageModal() {
     }
     const returnPath = searchParams.get('from') === 'my-creations' ? '/my-creations' : '/';
     router.push(returnPath);
-    router.refresh(); // Clear Next.js router cache
   }, [router, liked, userLiked, triggerRefresh, searchParams]);
 
   // Escape key is now handled via Dialog's onEscapeKeyDown prop
