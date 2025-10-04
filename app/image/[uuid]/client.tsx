@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import ImageDisplay from "@/components/image-display";
@@ -30,6 +30,7 @@ interface ImageDetailClientProps {
 
 export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCount, commentsCount, userLiked, comments: initialComments, visibility, isOwner }: ImageDetailClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { triggerRefresh } = useImageRefresh();
   const [imageVisibility, setImageVisibility] = useState(visibility);
 
@@ -105,7 +106,8 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
       }
 
       triggerRefresh();
-      router.push('/');
+      const returnPath = searchParams.get('from') === 'my-creations' ? '/my-creations' : '/';
+      router.push(returnPath);
     } catch (error) {
       console.error('Error deleting image:', error);
       alert('Failed to delete image. Please try again.');
@@ -121,13 +123,14 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        router.push('/');
+        const returnPath = searchParams.get('from') === 'my-creations' ? '/my-creations' : '/';
+        router.push(returnPath);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [router]);
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,13 +138,16 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between p-4 max-w-6xl mx-auto">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => {
+              const returnPath = searchParams.get('from') === 'my-creations' ? '/my-creations' : '/';
+              router.push(returnPath);
+            }}
             className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg transition-colors group"
             aria-label="Back to Gallery"
           >
             <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
             <span className="text-base font-medium">
-              Back to Gallery
+              {searchParams.get('from') === 'my-creations' ? 'Back to My Creations' : 'Back to Gallery'}
             </span>
           </button>
           <h1 className="text-lg font-semibold">{imageName || "Image"}</h1>

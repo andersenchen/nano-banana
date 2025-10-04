@@ -240,7 +240,7 @@ export default function MyCreations() {
               {images.map((image, index) => (
                 <Link
                   key={image.id}
-                  href={`/image/${image.id}`}
+                  href={`/image/${image.id}?from=my-creations`}
                   className="aspect-square overflow-hidden border border-gray-200 dark:border-gray-800 block group cursor-pointer relative"
                 >
                   <Image

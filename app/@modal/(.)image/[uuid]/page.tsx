@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useCallback, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ export default function ImageModal() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { triggerRefresh } = useImageRefresh();
 
   const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments: fetchedComments, visibility, isOwner, loading } = useImageFetch(params.uuid);
@@ -98,7 +99,8 @@ export default function ImageModal() {
       }
 
       triggerRefresh();
-      router.push('/');
+      const returnPath = searchParams.get('from') === 'my-creations' ? '/my-creations' : '/';
+      router.push(returnPath);
     } catch (error) {
       console.error('Error deleting image:', error);
       alert('Failed to delete image. Please try again.');
@@ -109,9 +111,10 @@ export default function ImageModal() {
     if (liked !== userLiked) {
       triggerRefresh();
     }
-    router.push('/');
+    const returnPath = searchParams.get('from') === 'my-creations' ? '/my-creations' : '/';
+    router.push(returnPath);
     router.refresh(); // Clear Next.js router cache
-  }, [router, liked, userLiked, triggerRefresh]);
+  }, [router, liked, userLiked, triggerRefresh, searchParams]);
 
   // Keyboard navigation for Escape key (arrow keys handled in useImageGallery)
   useEffect(() => {
