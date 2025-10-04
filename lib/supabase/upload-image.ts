@@ -11,7 +11,7 @@ export type VisibilityType = 'public' | 'unlisted' | 'private';
 export async function uploadImageToSupabase(
   imageBase64: string,
   mimeType: string = "image/png",
-  visibility: VisibilityType = "public"
+  visibility: VisibilityType = "unlisted"
 ): Promise<UploadImageResult> {
   try {
     const supabase = createClient();

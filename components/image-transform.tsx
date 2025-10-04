@@ -31,7 +31,16 @@ export default function ImageTransform({
   const [user, setUser] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
-  const [visibility, setVisibility] = useState<VisibilityType>("public");
+  const [visibility, setVisibility] = useState<VisibilityType>(() => {
+    // Load saved preference from localStorage, default to "unlisted"
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('transformVisibility');
+      if (saved === 'public' || saved === 'unlisted' || saved === 'private') {
+        return saved;
+      }
+    }
+    return "unlisted";
+  });
   const { triggerRefresh } = useImageRefresh();
   const [pendingTransform, setPendingTransform] = useState<{ prompt: string; imageUrl: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -39,6 +48,11 @@ export default function ImageTransform({
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Persist visibility preference
+  useEffect(() => {
+    localStorage.setItem('transformVisibility', visibility);
+  }, [visibility]);
 
   useEffect(() => {
     // Check user authentication status first
