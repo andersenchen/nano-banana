@@ -254,10 +254,13 @@ export default function MyCreations() {
                   />
 
                   {/* Visibility indicator - top right */}
-                  <div className="absolute top-2 right-2 p-1 bg-black/20 rounded-full backdrop-blur-sm z-10">
+                  <div className="absolute top-2 right-2 p-1 bg-black/20 rounded-full backdrop-blur-sm z-10 group/visibility">
                     {image.visibility === 'public' && <Globe className="w-3.5 h-3.5 text-white/70" />}
                     {image.visibility === 'unlisted' && <Link2 className="w-3.5 h-3.5 text-white/70" />}
                     {image.visibility === 'private' && <Lock className="w-3.5 h-3.5 text-white/70" />}
+                    <span className="absolute right-0 top-full mt-1 px-2 py-1 bg-black/90 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/visibility:opacity-100 transition-opacity pointer-events-none">
+                      {image.visibility.charAt(0).toUpperCase() + image.visibility.slice(1)}
+                    </span>
                   </div>
 
                   {/* Like button - bottom left */}
