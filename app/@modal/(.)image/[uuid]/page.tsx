@@ -116,17 +116,8 @@ export default function ImageModal() {
     router.refresh(); // Clear Next.js router cache
   }, [router, liked, userLiked, triggerRefresh, searchParams]);
 
-  // Keyboard navigation for Escape key (arrow keys handled in useImageGallery)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleClose]);
+  // Escape key is now handled via Dialog's onEscapeKeyDown prop
+  // Arrow keys handled in useImageGallery
 
   // Check if we should show the modal based on current path
   const shouldShowModal = pathname.includes('/image/');
@@ -139,7 +130,10 @@ export default function ImageModal() {
   if (loading) {
     return (
       <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
-        <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 bg-black">
+        <DialogContent
+          className="max-w-7xl w-[95vw] h-[90vh] p-0 bg-black"
+          onEscapeKeyDown={() => handleClose()}
+        >
           <DialogTitle className="sr-only">Loading Image</DialogTitle>
           <DialogDescription className="sr-only">Image is loading, please wait</DialogDescription>
           <div className="flex items-center justify-center h-full">
@@ -152,7 +146,10 @@ export default function ImageModal() {
 
   return (
     <Dialog key={Array.isArray(params.uuid) ? params.uuid[0] : params.uuid} open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[98vh] h-auto lg:max-h-[95vh] lg:h-auto p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col">
+      <DialogContent
+        className="max-w-[95vw] w-[95vw] max-h-[98vh] h-auto lg:max-h-[95vh] lg:h-auto p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col"
+        onEscapeKeyDown={() => handleClose()}
+      >
         <DialogTitle className="sr-only">{imageName || "Image"}</DialogTitle>
         <DialogDescription className="sr-only">Image detail view with comments and interactions</DialogDescription>
 
