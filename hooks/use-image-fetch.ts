@@ -18,6 +18,8 @@ interface UseImageFetchResult {
   commentsCount: number;
   userLiked: boolean;
   comments: Comment[];
+  visibility: 'public' | 'unlisted' | 'private';
+  isOwner: boolean;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -30,6 +32,8 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
   const [commentsCount, setCommentsCount] = useState<number>(0);
   const [userLiked, setUserLiked] = useState<boolean>(false);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [isOwner, setIsOwner] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
@@ -66,6 +70,8 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
         setCommentsCount(image.comments_count);
         setUserLiked(image.user_liked);
         setComments(data.comments || []);
+        setVisibility(image.visibility || 'public');
+        setIsOwner(image.is_owner || false);
       } catch (error) {
         console.error("Error fetching image:", error);
         setError("Failed to fetch image");
@@ -88,6 +94,8 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
     commentsCount,
     userLiked,
     comments,
+    visibility,
+    isOwner,
     loading,
     error,
     refetch

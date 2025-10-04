@@ -11,6 +11,23 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Check if image exists and user can access it
+    const { data: image, error: imageError } = await supabase
+      .from("images")
+      .select("id, visibility, user_id")
+      .eq("id", imageId)
+      .single();
+
+    if (imageError || !image) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
+    }
+
+    // Check visibility permissions
+    if (image.visibility === "private" && (!user || user.id !== image.user_id)) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
+    }
 
     const { data: comments, error } = await supabase
       .from("comments")
@@ -43,6 +60,22 @@ export async function POST(request: NextRequest) {
 
     if (!imageId || !text?.trim()) {
       return Response.json({ error: "imageId and text are required" }, { status: 400 });
+    }
+
+    // Check if image exists and user can access it
+    const { data: image, error: imageError } = await supabase
+      .from("images")
+      .select("id, visibility, user_id")
+      .eq("id", imageId)
+      .single();
+
+    if (imageError || !image) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
+    }
+
+    // Check visibility permissions - can't comment on private images unless you own them
+    if (image.visibility === "private" && user.id !== image.user_id) {
+      return Response.json({ error: "Image not found" }, { status: 404 });
     }
 
     const username = user.email?.split("@")[0] || "Anonymous";

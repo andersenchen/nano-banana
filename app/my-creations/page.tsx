@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Heart } from "lucide-react";
+import { Heart, Globe, Link2, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useImageRefresh } from "@/lib/image-refresh-context";
+import { Header } from "@/components/header";
 
 interface ImageFile {
   id: string;
@@ -15,6 +16,7 @@ interface ImageFile {
   likesCount: number;
   commentsCount: number;
   userLiked?: boolean;
+  visibility: 'public' | 'unlisted' | 'private';
 }
 
 export default function MyCreations() {
@@ -30,6 +32,7 @@ export default function MyCreations() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastImageRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const { refreshKey } = useImageRefresh();
 
   useEffect(() => {
@@ -101,23 +104,11 @@ export default function MyCreations() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    if (refreshKey > 0) {
-      setPage(1);
-      fetch(`/api/my-images?page=1&limit=20`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.images) {
-            setImages(data.images);
-            setHasMore(data.hasMore);
-          }
-        })
-        .catch(err => {
-          console.error("Error refreshing images:", err);
-        });
-    } else {
-      fetchImages(1);
-    }
-  }, [refreshKey, fetchImages, isAuthenticated]);
+    // Reset and refetch when pathname changes (navigation) or refreshKey changes
+    setPage(1);
+    setLoading(true);
+    fetchImages(1);
+  }, [refreshKey, fetchImages, isAuthenticated, pathname]);
 
   useEffect(() => {
     if (observerRef.current) {
@@ -151,25 +142,21 @@ export default function MyCreations() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-5xl mx-auto px-5 py-8">
-          <div className="mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Gallery
-            </Link>
-          </div>
-          <h1 className="text-3xl font-bold mb-8">My Creations</h1>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square bg-gray-200 dark:bg-gray-800 animate-pulse"
-              />
-            ))}
+      <main className="min-h-screen flex flex-col items-center">
+        <div className="flex-1 w-full flex flex-col gap-8 items-center">
+          <Header activePage="my-creations" />
+          <div className="w-full max-w-5xl px-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-square bg-gray-200 dark:bg-gray-800 animate-pulse"
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -223,34 +210,24 @@ export default function MyCreations() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-5xl mx-auto px-5 py-8">
-          <div className="mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Gallery
-            </Link>
-          </div>
-          <h1 className="text-3xl font-bold mb-8">My Creations</h1>
-          <div className="text-center py-8">
-            <p className="text-red-500">Error loading images: {error}</p>
+      <main className="min-h-screen flex flex-col items-center">
+        <div className="flex-1 w-full flex flex-col gap-8 items-center">
+          <Header activePage="my-creations" />
+          <div className="w-full max-w-5xl px-5">
+            <div className="text-center py-8">
+              <p className="text-red-500">Error loading images: {error}</p>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-5 py-8">
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Gallery
-          </Link>
-        </div>
-        <h1 className="text-3xl font-bold mb-8">My Creations</h1>
-
+    <main className="min-h-screen flex flex-col items-center">
+      <div className="flex-1 w-full flex flex-col gap-8 items-center">
+        <Header activePage="my-creations" />
+        <div className="w-full max-w-5xl px-5">
         {images.length === 0 && !loading ? (
           <div className="text-center py-8">
             <p className="text-gray-500 dark:text-gray-400">
@@ -263,7 +240,7 @@ export default function MyCreations() {
               {images.map((image, index) => (
                 <Link
                   key={image.id}
-                  href={`/image/${image.id}`}
+                  href={`/image/${image.id}?from=my-creations`}
                   className="aspect-square overflow-hidden border border-gray-200 dark:border-gray-800 block group cursor-pointer relative"
                 >
                   <Image
@@ -275,6 +252,15 @@ export default function MyCreations() {
                     priority={index === 0}
                     loading={index === 0 ? undefined : "lazy"}
                   />
+
+                  {/* Visibility indicator - top right */}
+                  <div className="absolute top-2 right-2 p-1 bg-black/20 rounded-full backdrop-blur-sm z-10">
+                    {image.visibility === 'public' && <Globe className="w-3.5 h-3.5 text-white/70" />}
+                    {image.visibility === 'unlisted' && <Link2 className="w-3.5 h-3.5 text-white/70" />}
+                    {image.visibility === 'private' && <Lock className="w-3.5 h-3.5 text-white/70" />}
+                  </div>
+
+                  {/* Like button - bottom left */}
                   <button
                     onClick={(e) => handleLike(e, image.id)}
                     disabled={pendingLikes.has(image.id)}
@@ -307,7 +293,8 @@ export default function MyCreations() {
             <div ref={lastImageRef} className="h-20" />
           </>
         )}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

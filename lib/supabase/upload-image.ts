@@ -6,9 +6,12 @@ export interface UploadImageResult {
   error?: string;
 }
 
+export type VisibilityType = 'public' | 'unlisted' | 'private';
+
 export async function uploadImageToSupabase(
-  imageBase64: string, 
-  mimeType: string = "image/png"
+  imageBase64: string,
+  mimeType: string = "image/png",
+  visibility: VisibilityType = "public"
 ): Promise<UploadImageResult> {
   try {
     const supabase = createClient();
@@ -45,6 +48,7 @@ export async function uploadImageToSupabase(
           id: data.id,
           user_id: user.id,
           name: fileName,
+          visibility,
         });
 
       if (dbError) {
