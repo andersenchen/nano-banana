@@ -1,31 +1,24 @@
--- Create public-images bucket if it doesn't exist
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'public-images',
-  'public-images',
-  true,  -- Make bucket public
-  52428800,  -- 50MB file size limit
-  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']::text[]
-)
-ON CONFLICT (id) DO NOTHING;
+-- Note: Bucket should be created via Supabase Dashboard or CLI
+-- The storage.buckets schema varies by Supabase version
 
--- Create a policy to allow public read access
+-- Create policies for storage objects
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects
   FOR SELECT TO public
   USING (bucket_id = 'public-images');
 
--- Create a policy to allow authenticated users to upload
+DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
 CREATE POLICY "Authenticated users can upload images" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'public-images');
 
--- Create a policy to allow users to update their own images
+DROP POLICY IF EXISTS "Users can update own images" ON storage.objects;
 CREATE POLICY "Users can update own images" ON storage.objects
   FOR UPDATE TO authenticated
   USING (auth.uid() = owner)
   WITH CHECK (bucket_id = 'public-images');
 
--- Create a policy to allow users to delete their own images
+DROP POLICY IF EXISTS "Users can delete own images" ON storage.objects;
 CREATE POLICY "Users can delete own images" ON storage.objects
   FOR DELETE TO authenticated
   USING (auth.uid() = owner AND bucket_id = 'public-images');
