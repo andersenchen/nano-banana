@@ -80,7 +80,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const { imageUrl, imageName, transformationPrompt } = imageData;
+  const { imageUrl, transformationPrompt } = imageData;
   const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/image/${uuid}`;
   const displayTitle = transformationPrompt ? `"${transformationPrompt}"` : "Uploaded Image";
 

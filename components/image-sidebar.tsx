@@ -32,7 +32,6 @@ interface ImageSidebarProps {
 }
 
 export default function ImageSidebar({
-  imageName,
   transformationPrompt,
   liked,
   likeCount,

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
+import type { ImageRecord } from "@/lib/types/image";
 
 export async function GET(
   request: NextRequest,
@@ -21,11 +22,11 @@ export async function GET(
       let currentId: string | null = id;
 
       while (currentId) {
-        const { data: image, error: fetchError } = await supabase
+        const { data: image, error: fetchError }: { data: ImageRecord | null; error: unknown } = await supabase
           .from("images")
           .select("id, name, created_at, source_image_id, transformation_prompt, generation_depth")
           .eq("id", currentId)
-          .single();
+          .single<ImageRecord>();
 
         if (fetchError || !image) break;
 
