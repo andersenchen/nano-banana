@@ -16,12 +16,14 @@ import { VisibilitySelector } from "@/components/visibility-selector";
 interface ImageTransformProps {
   className?: string;
   imageUrl?: string;
+  imageId?: string;
   onTransformComplete?: (newImageId: string) => void;
 }
 
 export default function ImageTransform({
   className = "",
   imageUrl,
+  imageId,
   onTransformComplete
 }: ImageTransformProps) {
   const [prompt, setPrompt] = useState("");
@@ -203,6 +205,7 @@ export default function ImageTransform({
         body: JSON.stringify({
           imageUrl,
           prompt: prompt.trim(),
+          sourceImageId: imageId,
         }),
         signal: controller.signal,
       });
@@ -238,7 +241,13 @@ export default function ImageTransform({
 
       const { imageData, mimeType } = await response.json();
 
-      const uploadResult = await uploadImageToSupabase(imageData, mimeType, visibility);
+      const uploadResult = await uploadImageToSupabase(
+        imageData,
+        mimeType,
+        visibility,
+        imageId,  // source image ID
+        prompt.trim()  // transformation prompt
+      );
 
       if (!uploadResult.success) {
         throw new Error(uploadResult.error || 'Failed to save transformed image');

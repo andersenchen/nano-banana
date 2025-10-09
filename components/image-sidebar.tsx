@@ -106,7 +106,7 @@ export default function ImageSidebar({
       <div className="flex-1 min-h-0">
         {activeTab === 'transform' ? (
           <div className="h-full overflow-y-auto">
-            <ImageTransform key="transform" imageUrl={imageUrl} />
+            <ImageTransform key="transform" imageUrl={imageUrl} imageId={imageId} />
           </div>
         ) : (
           <ImageComments

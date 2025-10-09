@@ -11,7 +11,9 @@ export type VisibilityType = 'public' | 'unlisted' | 'private';
 export async function uploadImageToSupabase(
   imageBase64: string,
   mimeType: string = "image/png",
-  visibility: VisibilityType = "unlisted"
+  visibility: VisibilityType = "unlisted",
+  sourceImageId?: string | null,
+  transformationPrompt?: string | null
 ): Promise<UploadImageResult> {
   try {
     const supabase = createClient();
@@ -42,14 +44,24 @@ export async function uploadImageToSupabase(
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user && data.id) {
+      const insertData: any = {
+        id: data.id,
+        user_id: user.id,
+        name: fileName,
+        visibility,
+      };
+
+      // Add provenance fields if provided
+      if (sourceImageId !== undefined) {
+        insertData.source_image_id = sourceImageId;
+      }
+      if (transformationPrompt !== undefined) {
+        insertData.transformation_prompt = transformationPrompt;
+      }
+
       const { error: dbError } = await supabase
         .from("images")
-        .insert({
-          id: data.id,
-          user_id: user.id,
-          name: fileName,
-          visibility,
-        });
+        .insert(insertData);
 
       if (dbError) {
         console.error("Error inserting image metadata:", dbError);
