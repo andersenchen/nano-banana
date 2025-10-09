@@ -44,7 +44,14 @@ export async function uploadImageToSupabase(
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user && data.id) {
-      const insertData: any = {
+      const insertData: {
+        id: string;
+        user_id: string;
+        name: string;
+        visibility: VisibilityType;
+        source_image_id?: string | null;
+        transformation_prompt?: string | null;
+      } = {
         id: data.id,
         user_id: user.id,
         name: fileName,

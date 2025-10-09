@@ -1,5 +1,7 @@
--- Note: Bucket should be created via Supabase Dashboard or CLI
--- The storage.buckets schema varies by Supabase version
+-- Create the public-images bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('public-images', 'public-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- Create policies for storage objects
 DROP POLICY IF EXISTS "Public Access" ON storage.objects;

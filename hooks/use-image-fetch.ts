@@ -14,6 +14,7 @@ export interface Comment {
 interface UseImageFetchResult {
   imageUrl: string;
   imageName: string;
+  transformationPrompt: string | null;
   likesCount: number;
   commentsCount: number;
   userLiked: boolean;
@@ -28,6 +29,7 @@ interface UseImageFetchResult {
 export function useImageFetch(uuid: string | string[] | undefined): UseImageFetchResult {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageName, setImageName] = useState<string>("");
+  const [transformationPrompt, setTransformationPrompt] = useState<string | null>(null);
   const [likesCount, setLikesCount] = useState<number>(0);
   const [commentsCount, setCommentsCount] = useState<number>(0);
   const [userLiked, setUserLiked] = useState<boolean>(false);
@@ -66,6 +68,7 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
 
         setImageUrl(image.url);
         setImageName(image.name);
+        setTransformationPrompt(image.transformation_prompt || null);
         setLikesCount(image.likes_count);
         setCommentsCount(image.comments_count);
         setUserLiked(image.user_liked);
@@ -90,6 +93,7 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
   return {
     imageUrl,
     imageName,
+    transformationPrompt,
     likesCount,
     commentsCount,
     userLiked,

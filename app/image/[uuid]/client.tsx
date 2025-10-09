@@ -20,6 +20,7 @@ interface ImageDetailClientProps {
   uuid: string;
   imageUrl: string;
   imageName: string;
+  transformationPrompt: string | null;
   likesCount: number;
   commentsCount: number;
   userLiked: boolean;
@@ -28,7 +29,7 @@ interface ImageDetailClientProps {
   isOwner: boolean;
 }
 
-export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCount, commentsCount, userLiked, comments: initialComments, visibility, isOwner }: ImageDetailClientProps) {
+export default function ImageDetailClient({ uuid, imageUrl, imageName, transformationPrompt, likesCount, commentsCount, userLiked, comments: initialComments, visibility, isOwner }: ImageDetailClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { triggerRefresh } = useImageRefresh();
@@ -150,14 +151,16 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
               {searchParams.get('from') === 'my-creations' ? 'Back to My Creations' : 'Back to Gallery'}
             </span>
           </button>
-          <h1 className="text-lg font-semibold">{imageName || "Image"}</h1>
+          <h1 className="text-lg font-semibold">
+            {transformationPrompt ? `"${transformationPrompt}"` : "Uploaded Image"}
+          </h1>
           <div className="w-10"></div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
+      <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8 px-4 lg:px-8">
         {/* Image Section */}
-        <div className="lg:col-span-2 h-[80vh] relative">
+        <div className="lg:col-span-3 h-[80vh] relative">
           <ImageDisplay
             imageUrl={imageUrl}
             imageName={imageName}
@@ -167,6 +170,7 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
         {/* Sidebar */}
         <ImageSidebar
           imageName={imageName}
+          transformationPrompt={transformationPrompt}
           liked={liked}
           likeCount={likeCount}
           comments={comments}
@@ -184,7 +188,7 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, likesCoun
           onDelete={handleDelete}
           onCommentChange={setNewComment}
           onCommentSubmit={handleComment}
-          className="lg:col-span-1 flex flex-col border-l border-border lg:border-l-0"
+          className="lg:col-span-2 flex flex-col border-l border-border lg:border-l-0"
         />
       </div>
     </div>

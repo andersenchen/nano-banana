@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const { data: image, error } = await supabase
       .from("images")
-      .select("id, name, likes_count, comments_count, visibility, user_id")
+      .select("id, name, likes_count, comments_count, visibility, user_id, transformation_prompt")
       .eq("id", imageId)
       .single();
 
@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
         user_liked: userLiked,
         visibility: image.visibility,
         is_owner: user?.id === image.user_id,
+        transformation_prompt: image.transformation_prompt,
       },
       comments: formattedComments,
     });

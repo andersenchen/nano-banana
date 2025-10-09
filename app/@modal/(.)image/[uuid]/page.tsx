@@ -19,7 +19,7 @@ export default function ImageModal() {
   const searchParams = useSearchParams();
   const { triggerRefresh } = useImageRefresh();
 
-  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments: fetchedComments, visibility, isOwner, loading } = useImageFetch(params.uuid);
+  const { imageUrl, imageName, transformationPrompt, likesCount, commentsCount, userLiked, comments: fetchedComments, visibility, isOwner, loading } = useImageFetch(params.uuid);
   const { allImages, currentImageIndex, handlePrevious, handleNext } = useImageGallery(params.uuid);
   const [imageVisibility, setImageVisibility] = useState(visibility);
 
@@ -149,7 +149,9 @@ export default function ImageModal() {
         className="max-w-[95vw] w-[95vw] max-h-[98vh] h-auto lg:max-h-[95vh] lg:h-auto p-0 bg-black overflow-y-auto lg:overflow-hidden flex flex-col"
         onEscapeKeyDown={() => handleClose()}
       >
-        <DialogTitle className="sr-only">{imageName || "Image"}</DialogTitle>
+        <DialogTitle className="sr-only">
+          {transformationPrompt ? `"${transformationPrompt}"` : "Uploaded Image"}
+        </DialogTitle>
         <DialogDescription className="sr-only">Image detail view with comments and interactions</DialogDescription>
 
         {/* Navigation Arrows */}
@@ -183,6 +185,7 @@ export default function ImageModal() {
           {/* Sidebar - Comments Section */}
           <ImageSidebar
             imageName={imageName}
+            transformationPrompt={transformationPrompt}
             liked={liked}
             likeCount={likeCount}
             comments={comments}

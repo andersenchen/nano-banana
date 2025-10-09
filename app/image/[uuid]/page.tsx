@@ -16,7 +16,7 @@ async function getImageData(uuid: string) {
   try {
     const { data: image, error } = await supabase
       .from("images")
-      .select("id, name, likes_count, comments_count, visibility, user_id")
+      .select("id, name, likes_count, comments_count, visibility, user_id, transformation_prompt")
       .eq("id", uuid)
       .single();
 
@@ -56,6 +56,7 @@ async function getImageData(uuid: string) {
     return {
       imageUrl: urlData.publicUrl,
       imageName: image.name,
+      transformationPrompt: image.transformation_prompt,
       likesCount: image.likes_count,
       commentsCount: image.comments_count,
       userLiked,
@@ -79,14 +80,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const { imageUrl, imageName } = imageData;
+  const { imageUrl, imageName, transformationPrompt } = imageData;
   const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/image/${uuid}`;
-  
+  const displayTitle = transformationPrompt ? `"${transformationPrompt}"` : "Uploaded Image";
+
   return {
-    title: imageName,
+    title: displayTitle,
     description: `View on mememaker`,
     openGraph: {
-      title: imageName,
+      title: displayTitle,
       description: `View on mememaker`,
       url: pageUrl,
       siteName: "mememaker",
@@ -95,14 +97,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: imageName,
+          alt: displayTitle,
         },
       ],
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title: imageName,
+      title: displayTitle,
       description: `View on mememaker`,
       images: [imageUrl],
     },
@@ -117,7 +119,7 @@ export default async function ImageDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { imageUrl, imageName, likesCount, commentsCount, userLiked, comments, visibility, isOwner } = imageData;
+  const { imageUrl, imageName, transformationPrompt, likesCount, commentsCount, userLiked, comments, visibility, isOwner } = imageData;
 
-  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} likesCount={likesCount} commentsCount={commentsCount} userLiked={userLiked} comments={comments} visibility={visibility} isOwner={isOwner} />;
+  return <ImageDetailClient uuid={uuid} imageUrl={imageUrl} imageName={imageName} transformationPrompt={transformationPrompt} likesCount={likesCount} commentsCount={commentsCount} userLiked={userLiked} comments={comments} visibility={visibility} isOwner={isOwner} />;
 }

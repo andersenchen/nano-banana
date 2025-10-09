@@ -1,11 +1,16 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import ImageActionBar from "@/components/image-action-bar";
 import ImageComments from "@/components/image-comments";
 import ImageTransform from "@/components/image-transform";
+import ImageTree from "@/components/image-tree";
 import type { Comment } from "@/hooks/use-image-interactions";
 
 interface ImageSidebarProps {
   imageName: string;
+  transformationPrompt?: string | null;
   liked: boolean;
   likeCount: number;
   comments: Comment[];
@@ -28,6 +33,7 @@ interface ImageSidebarProps {
 
 export default function ImageSidebar({
   imageName,
+  transformationPrompt,
   liked,
   likeCount,
   comments,
@@ -47,12 +53,26 @@ export default function ImageSidebar({
   onCommentSubmit,
   className = "lg:col-span-1 bg-white dark:bg-background flex flex-col border-l lg:border-l border-border h-full"
 }: ImageSidebarProps) {
-  const [activeTab, setActiveTab] = useState<'transform' | 'comments'>('transform');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as 'transform' | 'comments' | 'tree' | null;
+  const [activeTab, setActiveTab] = useState<'transform' | 'comments' | 'tree'>(
+    tabParam && ['transform', 'comments', 'tree'].includes(tabParam) ? tabParam : 'transform'
+  );
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (tabParam && ['transform', 'comments', 'tree'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   return (
     <div className={className}>
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <h2 className="font-semibold truncate">{imageName || "Image"}</h2>
+        <h2 className="font-semibold truncate">
+          {transformationPrompt ? `"${transformationPrompt}"` : "Uploaded Image"}
+        </h2>
       </div>
 
       <ImageActionBar
@@ -99,6 +119,19 @@ export default function ImageSidebar({
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400" />
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('tree')}
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors relative ${
+              activeTab === 'tree'
+                ? 'text-blue-500'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Tree
+            {activeTab === 'tree' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -108,7 +141,7 @@ export default function ImageSidebar({
           <div className="h-full overflow-y-auto">
             <ImageTransform key="transform" imageUrl={imageUrl} imageId={imageId} />
           </div>
-        ) : (
+        ) : activeTab === 'comments' ? (
           <ImageComments
             key="comments"
             comments={comments}
@@ -117,6 +150,10 @@ export default function ImageSidebar({
             onCommentSubmit={onCommentSubmit}
             className="h-full"
           />
+        ) : (
+          <div className="h-full overflow-y-auto">
+            <ImageTree key="tree" imageId={imageId || ''} currentImageId={imageId || ''} />
+          </div>
         )}
       </div>
     </div>
