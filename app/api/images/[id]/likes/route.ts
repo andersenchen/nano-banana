@@ -1,180 +1,153 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
+import { checkImageViewPermission, getAuthenticatedUser } from "@/lib/api/permissions";
+import {
+  createErrorResponse,
+  notFoundError,
+  unauthorizedError,
+  ApiErrorCode,
+  withErrorHandler
+} from "@/lib/api/error-handler";
 
-export async function GET(
+export const GET = withErrorHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: imageId } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+) => {
+  const { id: imageId } = await params;
 
-    const { data: image, error: imageError } = await supabase
-      .from("images")
-      .select("likes_count, visibility, user_id")
-      .eq("id", imageId)
-      .single();
+  // Check permissions using centralized utility
+  const permissionCheck = await checkImageViewPermission(imageId);
 
-    if (imageError || !image) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Check visibility permissions
-    if (image.visibility === "private" && (!user || user.id !== image.user_id)) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    let userLiked = false;
-    if (user) {
-      const { data: like } = await supabase
-        .from("likes")
-        .select("id")
-        .eq("image_id", imageId)
-        .eq("user_id", user.id)
-        .single();
-
-      userLiked = !!like;
-    }
-
-    return Response.json({
-      likeCount: image.likes_count,
-      userLiked,
-    });
-  } catch (err) {
-    console.error("Error fetching likes:", err);
-    return Response.json(
-      { error: "Failed to fetch likes" },
-      { status: 500 }
-    );
+  if (!permissionCheck.allowed) {
+    return notFoundError("Image");
   }
-}
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: imageId } = await params;
+  const { image, userId } = permissionCheck;
+  if (!image) {
+    return notFoundError("Image");
+  }
+
+  let userLiked = false;
+  if (userId) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if image exists and user can access it
-    const { data: image, error: imageError } = await supabase
-      .from("images")
-      .select("id, visibility, user_id")
-      .eq("id", imageId)
-      .single();
-
-    if (imageError || !image) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Check visibility permissions - can't like private images unless you own them
-    if (image.visibility === "private" && user.id !== image.user_id) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Check if already liked
-    const { data: existingLike } = await supabase
+    const { data: like } = await supabase
       .from("likes")
       .select("id")
       .eq("image_id", imageId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
-    if (existingLike) {
-      return Response.json(
-        { error: "Image already liked" },
-        { status: 409 }
-      );
-    }
-
-    // Create the like
-    const { error } = await supabase
-      .from("likes")
-      .insert({ image_id: imageId, user_id: user.id });
-
-    if (error) throw error;
-
-    // Get updated count
-    const { data: updatedImage } = await supabase
-      .from("images")
-      .select("likes_count")
-      .eq("id", imageId)
-      .single();
-
-    return Response.json({
-      liked: true,
-      likeCount: updatedImage?.likes_count || 0,
-    });
-  } catch (err) {
-    console.error("Error liking image:", err);
-    return Response.json(
-      { error: "Failed to like image" },
-      { status: 500 }
-    );
+    userLiked = !!like;
   }
-}
 
-export async function DELETE(
+  return Response.json({
+    likeCount: image.likes_count,
+    userLiked,
+  });
+});
+
+export const POST = withErrorHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: imageId } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+) => {
+  const { id: imageId } = await params;
 
-    if (!user) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if image exists and user can access it
-    const { data: image, error: imageError } = await supabase
-      .from("images")
-      .select("id, visibility, user_id")
-      .eq("id", imageId)
-      .single();
-
-    if (imageError || !image) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Check visibility permissions
-    if (image.visibility === "private" && user.id !== image.user_id) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Delete the like
-    const { error } = await supabase
-      .from("likes")
-      .delete()
-      .eq("image_id", imageId)
-      .eq("user_id", user.id);
-
-    if (error) throw error;
-
-    // Get updated count
-    const { data: updatedImage } = await supabase
-      .from("images")
-      .select("likes_count")
-      .eq("id", imageId)
-      .single();
-
-    return Response.json({
-      liked: false,
-      likeCount: updatedImage?.likes_count || 0,
-    });
-  } catch (err) {
-    console.error("Error unliking image:", err);
-    return Response.json(
-      { error: "Failed to unlike image" },
-      { status: 500 }
-    );
+  // Check authentication
+  const authCheck = await getAuthenticatedUser();
+  if (!authCheck.authenticated) {
+    return unauthorizedError();
   }
-}
+
+  // Check if user can view the image
+  const permissionCheck = await checkImageViewPermission(imageId);
+  if (!permissionCheck.allowed) {
+    return notFoundError("Image");
+  }
+
+  const supabase = await createClient();
+
+  // Check if already liked
+  const { data: existingLike } = await supabase
+    .from("likes")
+    .select("id")
+    .eq("image_id", imageId)
+    .eq("user_id", authCheck.userId!)
+    .single();
+
+  if (existingLike) {
+    return createErrorResponse(ApiErrorCode.CONFLICT, {
+      message: "Image already liked",
+    });
+  }
+
+  // Create the like
+  const { error } = await supabase
+    .from("likes")
+    .insert({ image_id: imageId, user_id: authCheck.userId! });
+
+  if (error) {
+    return createErrorResponse(ApiErrorCode.DATABASE_ERROR, {
+      message: "Failed to like image",
+      details: error,
+    });
+  }
+
+  // Get updated count
+  const { data: updatedImage } = await supabase
+    .from("images")
+    .select("likes_count")
+    .eq("id", imageId)
+    .single();
+
+  return Response.json({
+    liked: true,
+    likeCount: updatedImage?.likes_count || 0,
+  });
+});
+
+export const DELETE = withErrorHandler(async (
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const { id: imageId } = await params;
+
+  // Check authentication
+  const authCheck = await getAuthenticatedUser();
+  if (!authCheck.authenticated) {
+    return unauthorizedError();
+  }
+
+  // Check if user can view the image
+  const permissionCheck = await checkImageViewPermission(imageId);
+  if (!permissionCheck.allowed) {
+    return notFoundError("Image");
+  }
+
+  const supabase = await createClient();
+
+  // Delete the like
+  const { error } = await supabase
+    .from("likes")
+    .delete()
+    .eq("image_id", imageId)
+    .eq("user_id", authCheck.userId!);
+
+  if (error) {
+    return createErrorResponse(ApiErrorCode.DATABASE_ERROR, {
+      message: "Failed to unlike image",
+      details: error,
+    });
+  }
+
+  // Get updated count
+  const { data: updatedImage } = await supabase
+    .from("images")
+    .select("likes_count")
+    .eq("id", imageId)
+    .single();
+
+  return Response.json({
+    liked: false,
+    likeCount: updatedImage?.likes_count || 0,
+  });
+});

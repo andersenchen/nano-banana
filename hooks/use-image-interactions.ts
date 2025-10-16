@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Comment } from "./use-image-fetch";
+import type { Comment } from "@/lib/types";
 
 export type { Comment };
 

@@ -1,104 +1,93 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
+import { checkImageViewPermission, getAuthenticatedUser } from "@/lib/api/permissions";
+import {
+  createErrorResponse,
+  notFoundError,
+  unauthorizedError,
+  validationError,
+  ApiErrorCode,
+  withErrorHandler
+} from "@/lib/api/error-handler";
 
-export async function GET(
+export const GET = withErrorHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: imageId } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+) => {
+  const { id: imageId } = await params;
 
-    // Check if image exists and user can access it
-    const { data: image, error: imageError } = await supabase
-      .from("images")
-      .select("id, visibility, user_id")
-      .eq("id", imageId)
-      .single();
-
-    if (imageError || !image) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Check visibility permissions
-    if (image.visibility === "private" && (!user || user.id !== image.user_id)) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    const { data: comments, error } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("image_id", imageId)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    return Response.json({ comments: comments || [] });
-  } catch (err) {
-    console.error("Error fetching comments:", err);
-    return Response.json(
-      { error: "Failed to fetch comments" },
-      { status: 500 }
-    );
+  // Check permissions using centralized utility
+  const permissionCheck = await checkImageViewPermission(imageId);
+  if (!permissionCheck.allowed) {
+    return notFoundError("Image");
   }
-}
 
-export async function POST(
+  const supabase = await createClient();
+
+  const { data: comments, error } = await supabase
+    .from("comments")
+    .select("*")
+    .eq("image_id", imageId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return createErrorResponse(ApiErrorCode.DATABASE_ERROR, {
+      message: "Failed to fetch comments",
+      details: error,
+    });
+  }
+
+  return Response.json({ comments: comments || [] });
+});
+
+export const POST = withErrorHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: imageId } = await params;
-    const { text } = await request.json();
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+) => {
+  const { id: imageId } = await params;
+  const body = await request.json();
+  const { text } = body;
 
-    if (!user) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!text?.trim()) {
-      return Response.json({ error: "text is required" }, { status: 400 });
-    }
-
-    // Check if image exists and user can access it
-    const { data: image, error: imageError } = await supabase
-      .from("images")
-      .select("id, visibility, user_id")
-      .eq("id", imageId)
-      .single();
-
-    if (imageError || !image) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Check visibility permissions - can't comment on private images unless you own them
-    if (image.visibility === "private" && user.id !== image.user_id) {
-      return Response.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    const username = user.email?.split("@")[0] || "Anonymous";
-
-    const { data: comment, error } = await supabase
-      .from("comments")
-      .insert({
-        image_id: imageId,
-        user_id: user.id,
-        username,
-        text: text.trim(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return Response.json({ comment });
-  } catch (err) {
-    console.error("Error creating comment:", err);
-    return Response.json(
-      { error: "Failed to create comment" },
-      { status: 500 }
-    );
+  // Check authentication
+  const authCheck = await getAuthenticatedUser();
+  if (!authCheck.authenticated) {
+    return unauthorizedError();
   }
-}
+
+  // Validate comment text
+  if (!text?.trim()) {
+    return validationError("Comment text is required");
+  }
+
+  // Check if user can view the image
+  const permissionCheck = await checkImageViewPermission(imageId);
+  if (!permissionCheck.allowed) {
+    return notFoundError("Image");
+  }
+
+  const supabase = await createClient();
+
+  // Get user email for username
+  const { data: { user } } = await supabase.auth.getUser();
+  const username = user?.email?.split("@")[0] || "Anonymous";
+
+  const { data: comment, error } = await supabase
+    .from("comments")
+    .insert({
+      image_id: imageId,
+      user_id: authCheck.userId!,
+      username,
+      text: text.trim(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return createErrorResponse(ApiErrorCode.DATABASE_ERROR, {
+      message: "Failed to create comment",
+      details: error,
+    });
+  }
+
+  return Response.json({ comment });
+});

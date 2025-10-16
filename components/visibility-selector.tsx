@@ -1,7 +1,7 @@
 "use client";
 
 import { Globe, Link2, Lock, ChevronDown } from "lucide-react";
-import type { VisibilityType } from "@/lib/supabase/upload-image";
+import type { VisibilityType } from "@/lib/types";
 import {
   DropdownMenu,
   DropdownMenuContent,

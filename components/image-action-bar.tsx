@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Heart, Share, Copy, Check, Link, Globe, Link2, Lock, MoreVertical, Trash2 } from "lucide-react";
+import type { VisibilityType } from "@/lib/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +19,13 @@ interface ImageActionBarProps {
   likeCount: number;
   showShare?: boolean;
   imageId?: string;
-  visibility?: 'public' | 'unlisted' | 'private';
+  visibility?: VisibilityType;
   isOwner?: boolean;
   onLike: () => void;
   onShare?: () => void;
   onCopy?: () => void;
   onCopyLink?: () => void;
-  onVisibilityChange?: (visibility: 'public' | 'unlisted' | 'private') => void;
+  onVisibilityChange?: (visibility: VisibilityType) => void;
   onDelete?: () => void;
   className?: string;
 }
@@ -145,7 +146,7 @@ export default function ImageActionBar({
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Visibility</DropdownMenuLabel>
                     <DropdownMenuRadioGroup
                       value={visibility}
-                      onValueChange={(value) => onVisibilityChange(value as 'public' | 'unlisted' | 'private')}
+                      onValueChange={(value) => onVisibilityChange(value as VisibilityType)}
                     >
                       {visibilityOptions.map((option) => {
                         const Icon = option.icon;

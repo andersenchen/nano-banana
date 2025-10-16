@@ -6,7 +6,7 @@ import ImageActionBar from "@/components/image-action-bar";
 import ImageComments from "@/components/image-comments";
 import ImageTransform from "@/components/image-transform";
 import ImageTree from "@/components/image-tree";
-import type { Comment } from "@/hooks/use-image-interactions";
+import type { Comment, VisibilityType } from "@/lib/types";
 
 interface ImageSidebarProps {
   imageName: string;
@@ -18,13 +18,13 @@ interface ImageSidebarProps {
   showShare?: boolean;
   imageUrl?: string;
   imageId?: string;
-  visibility?: 'public' | 'unlisted' | 'private';
+  visibility?: VisibilityType;
   isOwner?: boolean;
   onLike: () => void;
   onShare?: () => void;
   onCopy?: () => void;
   onCopyLink?: () => void;
-  onVisibilityChange?: (visibility: 'public' | 'unlisted' | 'private') => void;
+  onVisibilityChange?: (visibility: VisibilityType) => void;
   onDelete?: () => void;
   onCommentChange: (value: string) => void;
   onCommentSubmit: (e: React.FormEvent) => void;

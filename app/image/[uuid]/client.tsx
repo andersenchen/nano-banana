@@ -7,14 +7,7 @@ import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
 import { useImageRefresh } from "@/lib/context/image-refresh-context";
-
-interface Comment {
-  id: string;
-  text: string;
-  username: string;
-  created_at: string;
-  user_id: string;
-}
+import type { Comment, VisibilityType } from "@/lib/types";
 
 interface ImageDetailClientProps {
   uuid: string;
@@ -25,7 +18,7 @@ interface ImageDetailClientProps {
   commentsCount: number;
   userLiked: boolean;
   comments: Comment[];
-  visibility: 'public' | 'unlisted' | 'private';
+  visibility: VisibilityType;
   isOwner: boolean;
 }
 
@@ -55,7 +48,7 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, transform
     initialComments,
   });
 
-  const handleVisibilityChange = async (newVisibility: 'public' | 'unlisted' | 'private') => {
+  const handleVisibilityChange = async (newVisibility: VisibilityType) => {
     if (!isOwner) return;
 
     const previousVisibility = imageVisibility;

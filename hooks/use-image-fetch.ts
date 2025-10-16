@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-export interface Comment {
-  id: string;
-  text: string;
-  username: string;
-  created_at: string;
-  user_id: string;
-}
+import type { Comment, VisibilityType } from "@/lib/types";
 
 interface UseImageFetchResult {
   imageUrl: string;
@@ -19,7 +12,7 @@ interface UseImageFetchResult {
   commentsCount: number;
   userLiked: boolean;
   comments: Comment[];
-  visibility: 'public' | 'unlisted' | 'private';
+  visibility: VisibilityType;
   isOwner: boolean;
   loading: boolean;
   error: string | null;
@@ -34,7 +27,7 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
   const [commentsCount, setCommentsCount] = useState<number>(0);
   const [userLiked, setUserLiked] = useState<boolean>(false);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [visibility, setVisibility] = useState<VisibilityType>('public');
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

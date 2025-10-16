@@ -2,13 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { MessageCircle } from "lucide-react";
-
-interface Comment {
-  id: string;
-  text: string;
-  username: string;
-  created_at: string;
-}
+import type { Comment } from "@/lib/types";
 
 function formatTimestamp(timestamp: string): string {
   const date = new Date(timestamp);

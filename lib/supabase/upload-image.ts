@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import type { VisibilityType } from "@/lib/types";
 
 export interface UploadImageResult {
   success: boolean;
@@ -6,7 +7,8 @@ export interface UploadImageResult {
   error?: string;
 }
 
-export type VisibilityType = 'public' | 'unlisted' | 'private';
+// Re-export for backwards compatibility
+export type { VisibilityType };
 
 export async function uploadImageToSupabase(
   imageBase64: string,
