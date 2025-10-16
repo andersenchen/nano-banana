@@ -1,118 +1,55 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
+import {
+  unauthorizedError,
+  createErrorResponse,
+  ApiErrorCode,
+  withErrorHandler
+} from "@/lib/api/error-handler";
+import { getUserImages, getPublicImages } from "@/lib/api/queries";
+import { formatImagesForResponse, getUserLikedImageIds } from "@/lib/api/image-helpers";
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams;
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
   const bucketName = searchParams.get("bucket") || "public-images";
   const filter = searchParams.get("filter"); // 'mine' or null
 
-  const offset = (page - 1) * limit;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // If filter=mine, require authentication
-    if (filter === "mine") {
-      if (!user) {
-        return Response.json({ error: "Authentication required" }, { status: 401 });
-      }
-
-      // Get current user's images
-      const { data: images, error } = await supabase
-        .from("images")
-        .select("id, name, likes_count, comments_count, created_at, visibility")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (error) {
-        return Response.json({ error: error.message }, { status: 500 });
-      }
-
-      if (!images) {
-        return Response.json({ images: [], hasMore: false });
-      }
-
-      // Get user's likes
-      const { data: likes } = await supabase
-        .from("likes")
-        .select("image_id")
-        .eq("user_id", user.id)
-        .in("image_id", images.map(img => img.id));
-
-      const userLikes = new Set(likes?.map(like => like.image_id) || []);
-
-      const imageData = images.map((image) => {
-        const { data: urlData } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(image.name);
-
-        return {
-          id: image.id,
-          name: image.name,
-          url: urlData.publicUrl,
-          likesCount: image.likes_count,
-          commentsCount: image.comments_count,
-          userLiked: userLikes.has(image.id),
-          visibility: image.visibility,
-        };
-      });
-
-      const hasMore = images.length === limit;
-
-      return Response.json({
-        images: imageData,
-        hasMore,
-        page,
-        limit
-      });
+  // If filter=mine, require authentication
+  if (filter === "mine") {
+    if (!user) {
+      return unauthorizedError("Authentication required");
     }
 
-    // Default: get public images
-    const { data: images, error } = await supabase
-      .from("images")
-      .select("id, name, likes_count, comments_count, created_at")
-      .eq("visibility", "public")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    // Get current user's images using query builder
+    const { data: images, error } = await getUserImages(user.id, page, limit);
 
     if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+      return createErrorResponse(ApiErrorCode.DATABASE_ERROR, {
+        message: "Failed to fetch images",
+        details: error,
+      });
     }
 
-    if (!images) {
-      return Response.json({ images: [], hasMore: false });
+    if (!images || images.length === 0) {
+      return Response.json({ images: [], hasMore: false, page, limit });
     }
 
-    let userLikes: Set<string> = new Set();
-    if (user) {
-      const { data: likes } = await supabase
-        .from("likes")
-        .select("image_id")
-        .eq("user_id", user.id)
-        .in("image_id", images.map(img => img.id));
+    // Get user's likes for these images
+    const userLikedIds = await getUserLikedImageIds(
+      user.id,
+      images.map(img => img.id)
+    );
 
-      if (likes) {
-        userLikes = new Set(likes.map(like => like.image_id));
-      }
-    }
-
-    const imageData = images.map((image) => {
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(image.name);
-
-      return {
-        id: image.id,
-        name: image.name,
-        url: urlData.publicUrl,
-        likesCount: image.likes_count,
-        commentsCount: image.comments_count,
-        userLiked: userLikes.has(image.id),
-      };
+    // Format images with URLs
+    const imageData = await formatImagesForResponse(images, {
+      bucketName,
+      userLikedIds,
+      includeProvenance: false,
     });
 
     const hasMore = images.length === limit;
@@ -123,11 +60,44 @@ export async function GET(request: NextRequest) {
       page,
       limit
     });
-  } catch (err) {
-    console.error("Error fetching images:", err);
-    return Response.json(
-      { error: "Failed to fetch images" },
-      { status: 500 }
+  }
+
+  // Default: get public images using query builder
+  const { data: images, error } = await getPublicImages(page, limit);
+
+  if (error) {
+    return createErrorResponse(ApiErrorCode.DATABASE_ERROR, {
+      message: "Failed to fetch images",
+      details: error,
+    });
+  }
+
+  if (!images || images.length === 0) {
+    return Response.json({ images: [], hasMore: false, page, limit });
+  }
+
+  // Get user's likes if authenticated
+  let userLikedIds: Set<string> = new Set();
+  if (user) {
+    userLikedIds = await getUserLikedImageIds(
+      user.id,
+      images.map(img => img.id)
     );
   }
-}
+
+  // Format images with URLs
+  const imageData = await formatImagesForResponse(images, {
+    bucketName,
+    userLikedIds,
+    includeProvenance: false,
+  });
+
+  const hasMore = images.length === limit;
+
+  return Response.json({
+    images: imageData,
+    hasMore,
+    page,
+    limit
+  });
+});
