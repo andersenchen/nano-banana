@@ -197,7 +197,7 @@ export default function ImageTransform({
     setAbortController(controller);
 
     try {
-      const response = await fetch('/api/transform-image', {
+      const response = await fetch('/api/transformations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -193,10 +193,9 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
     setImages(updatedImages);
 
     try {
-      const res = await fetch("/api/likes", {
-        method: "POST",
+      const res = await fetch(`/api/images/${imageId}/likes`, {
+        method: wasLiked ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageId }),
       });
 
       const data = await res.json();

@@ -54,13 +54,13 @@ export default function ImageModal() {
     setImageVisibility(newVisibility);
 
     try {
-      const response = await fetch('/api/update-visibility', {
-        method: 'POST',
+      const imageId = Array.isArray(params.uuid) ? params.uuid[0] : params.uuid;
+      const response = await fetch(`/api/images/${imageId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageId: (Array.isArray(params.uuid) ? params.uuid[0] : params.uuid),
           visibility: newVisibility,
         }),
       });
@@ -84,14 +84,12 @@ export default function ImageModal() {
     }
 
     try {
-      const response = await fetch('/api/delete-image', {
+      const imageId = Array.isArray(params.uuid) ? params.uuid[0] : params.uuid;
+      const response = await fetch(`/api/images/${imageId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          imageId: (Array.isArray(params.uuid) ? params.uuid[0] : params.uuid),
-        }),
       });
 
       if (!response.ok) {

@@ -1,15 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const imageId = searchParams.get("imageId");
-
-  if (!imageId) {
-    return Response.json({ error: "imageId is required" }, { status: 400 });
-  }
-
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id: imageId } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -47,8 +44,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id: imageId } = await params;
+    const { text } = await request.json();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -56,10 +58,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { imageId, text } = await request.json();
-
-    if (!imageId || !text?.trim()) {
-      return Response.json({ error: "imageId and text are required" }, { status: 400 });
+    if (!text?.trim()) {
+      return Response.json({ error: "text is required" }, { status: 400 });
     }
 
     // Check if image exists and user can access it
@@ -98,39 +98,6 @@ export async function POST(request: NextRequest) {
     console.error("Error creating comment:", err);
     return Response.json(
       { error: "Failed to create comment" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { commentId } = await request.json();
-
-    if (!commentId) {
-      return Response.json({ error: "commentId is required" }, { status: 400 });
-    }
-
-    const { error } = await supabase
-      .from("comments")
-      .delete()
-      .eq("id", commentId)
-      .eq("user_id", user.id);
-
-    if (error) throw error;
-
-    return Response.json({ success: true });
-  } catch (err) {
-    console.error("Error deleting comment:", err);
-    return Response.json(
-      { error: "Failed to delete comment" },
       { status: 500 }
     );
   }

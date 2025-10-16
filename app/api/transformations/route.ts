@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     // Check if user is authenticated
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Error generating image:", error);
-    
+
     if (error instanceof Error) {
       console.error("Error details:", error.message, error.stack);
       return NextResponse.json(
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Failed to generate image" },
       { status: 500 }

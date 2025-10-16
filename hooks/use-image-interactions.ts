@@ -47,10 +47,9 @@ export function useImageInteractions({
     setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
 
     try {
-      const res = await fetch("/api/likes", {
-        method: "POST",
+      const res = await fetch(`/api/images/${imageId}/likes`, {
+        method: wasLiked ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageId }),
       });
 
       const data = await res.json();
@@ -78,10 +77,10 @@ export function useImageInteractions({
     setComments(prev => [tempComment, ...prev]);
 
     try {
-      const res = await fetch("/api/comments", {
+      const res = await fetch(`/api/images/${imageId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageId, text: newComment }),
+        body: JSON.stringify({ text: newComment }),
       });
 
       if (!res.ok) throw new Error("Failed to post comment");

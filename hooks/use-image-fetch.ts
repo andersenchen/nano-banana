@@ -50,7 +50,7 @@ export function useImageFetch(uuid: string | string[] | undefined): UseImageFetc
       try {
         const targetUuid = Array.isArray(uuid) ? uuid[0] : uuid;
 
-        const response = await fetch(`/api/images-detail?imageId=${targetUuid}&t=${Date.now()}`, {
+        const response = await fetch(`/api/images/${targetUuid}?t=${Date.now()}`, {
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',

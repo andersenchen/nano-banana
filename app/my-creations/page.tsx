@@ -57,7 +57,7 @@ export default function MyCreations() {
     }
 
     try {
-      const response = await fetch(`/api/my-images?page=${pageNum}&limit=20`);
+      const response = await fetch(`/api/images?filter=mine&page=${pageNum}&limit=20`);
 
       if (response.status === 401) {
         router.push("/");
@@ -181,10 +181,9 @@ export default function MyCreations() {
     setImages(updatedImages);
 
     try {
-      const res = await fetch("/api/likes", {
-        method: "POST",
+      const res = await fetch(`/api/images/${imageId}/likes`, {
+        method: wasLiked ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageId }),
       });
 
       const data = await res.json();

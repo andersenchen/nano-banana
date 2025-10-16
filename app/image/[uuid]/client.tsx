@@ -62,13 +62,12 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, transform
     setImageVisibility(newVisibility);
 
     try {
-      const response = await fetch('/api/update-visibility', {
-        method: 'POST',
+      const response = await fetch(`/api/images/${uuid}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageId: uuid,
           visibility: newVisibility,
         }),
       });
@@ -92,14 +91,11 @@ export default function ImageDetailClient({ uuid, imageUrl, imageName, transform
     }
 
     try {
-      const response = await fetch('/api/delete-image', {
+      const response = await fetch(`/api/images/${uuid}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          imageId: uuid,
-        }),
       });
 
       if (!response.ok) {
