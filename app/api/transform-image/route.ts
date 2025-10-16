@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { MONTHLY_TRANSFORMATION_LIMIT } from "@/lib/config/transformation-limits";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
+      );
+    }
+
+    // Check monthly transformation limit before processing
+    const { data: currentCount, error: counterError } = await supabase
+      .rpc('get_current_month_counter');
+
+    if (counterError) {
+      console.error("Error checking transformation counter:", counterError);
+      return NextResponse.json(
+        { error: "Failed to check transformation limit" },
+        { status: 500 }
+      );
+    }
+
+    if (currentCount >= MONTHLY_TRANSFORMATION_LIMIT) {
+      return NextResponse.json(
+        {
+          error: `Monthly transformation limit reached (${MONTHLY_TRANSFORMATION_LIMIT}). Please try again next month.`,
+          limitReached: true,
+          currentCount,
+          limit: MONTHLY_TRANSFORMATION_LIMIT
+        },
+        { status: 429 } // 429 Too Many Requests
+      );
+    }
+
+    // Atomically increment counter before processing
+    const { data: newCount, error: incrementError } = await supabase
+      .rpc('increment_transformation_counter');
+
+    if (incrementError) {
+      console.error("Error incrementing transformation counter:", incrementError);
+      return NextResponse.json(
+        { error: "Failed to increment transformation counter" },
+        { status: 500 }
+      );
+    }
+
+    // Check again after increment (race condition protection)
+    if (newCount > MONTHLY_TRANSFORMATION_LIMIT) {
+      return NextResponse.json(
+        {
+          error: `Monthly transformation limit reached (${MONTHLY_TRANSFORMATION_LIMIT}). Please try again next month.`,
+          limitReached: true,
+          currentCount: newCount,
+          limit: MONTHLY_TRANSFORMATION_LIMIT
+        },
+        { status: 429 }
       );
     }
 
