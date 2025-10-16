@@ -10,7 +10,7 @@ import LoadingSpinner from "@/components/loading-spinner";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
 import { useImageFetch } from "@/hooks/use-image-fetch";
 import { useImageGallery } from "@/hooks/use-image-gallery";
-import { useImageRefresh } from "@/lib/image-refresh-context";
+import { useImageRefresh } from "@/lib/context/image-refresh-context";
 
 export default function ImageModal() {
   const params = useParams();

@@ -4,7 +4,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "next-themes";
-import { ImageRefreshProvider } from "@/lib/image-refresh-context";
+import { ImageRefreshProvider } from "@/lib/context/image-refresh-context";
 import { FullStoryInit } from "@/components/fullstory-init";
 import { FullStoryIdentity } from "@/components/fullstory-identity";
 import "./globals.css";

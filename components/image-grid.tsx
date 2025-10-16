@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useImageRefresh } from "@/lib/image-refresh-context";
+import { useImageRefresh } from "@/lib/context/image-refresh-context";
 import { createClient } from "@/lib/supabase/client";
 
 interface ImageGridProps {

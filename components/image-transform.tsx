@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { uploadImageToSupabase, type VisibilityType } from "@/lib/supabase/upload-image";
-import { useImageRefresh } from "@/lib/image-refresh-context";
+import { useImageRefresh } from "@/lib/context/image-refresh-context";
 import { transformPrompts } from "@/lib/transform-prompts";
 import { LoginModal } from "./login-modal";
 import TransformLoadingProgress from "./transform-loading-progress";

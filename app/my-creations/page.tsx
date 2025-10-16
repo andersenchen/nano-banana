@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Heart, Globe, Link2, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
-import { useImageRefresh } from "@/lib/image-refresh-context";
+import { useImageRefresh } from "@/lib/context/image-refresh-context";
 import { Header } from "@/components/header";
 
 interface ImageFile {

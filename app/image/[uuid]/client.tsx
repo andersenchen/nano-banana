@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import ImageDisplay from "@/components/image-display";
 import ImageSidebar from "@/components/image-sidebar";
 import { useImageInteractions } from "@/hooks/use-image-interactions";
-import { useImageRefresh } from "@/lib/image-refresh-context";
+import { useImageRefresh } from "@/lib/context/image-refresh-context";
 
 interface Comment {
   id: string;

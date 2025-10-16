@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, X } from "lucide-react";
 import { uploadImageToSupabase, type VisibilityType } from "@/lib/supabase/upload-image";
-import { useImageRefresh } from "@/lib/image-refresh-context";
+import { useImageRefresh } from "@/lib/context/image-refresh-context";
 import { VisibilitySelector } from "@/components/visibility-selector";
 
 interface StagedFile {
