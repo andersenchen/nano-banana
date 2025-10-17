@@ -221,6 +221,8 @@ export function ImageUploadButton() {
                     alt={file.name}
                     width={112}
                     height={112}
+                    quality={75}
+                    unoptimized
                     className="w-full h-24 md:h-28 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
                   />
                   <button

@@ -234,6 +234,7 @@ export function ImageGrid({ bucketName = "public-images" }: ImageGridProps) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              quality={75}
               priority={index === 0}
               loading={index === 0 ? undefined : "lazy"}
             />

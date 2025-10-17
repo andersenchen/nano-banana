@@ -21,6 +21,7 @@ export default function ImageDisplay({
           alt={imageName || "Detail view"}
           width={1024}
           height={1024}
+          quality={90}
           className={className || defaultClassName}
           style={{
             maxWidth: '100%',
