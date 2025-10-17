@@ -2,175 +2,170 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Overview
+
+Mememaker is an AI-powered image transformation platform built with Next.js 15, Supabase, and Google's Gemini 2.5 Flash (Nano Banana). Users upload images and transform them using natural language prompts. The platform includes social features (likes, comments) and tracks image provenance/lineage.
+
+**Live Demo**: https://nano-banana-nine.vercel.app/
+
 ## Development Commands
 
-**Development server:**
 ```bash
-npm run dev  # Runs Next.js with Turbopack
-```
+# Development (uses Turbopack for faster builds)
+npm run dev
 
-**Build and start:**
-```bash
+# Production build
 npm run build
 npm start
+
+# Linting (Next.js ESLint + Biome)
+npm run lint
 ```
 
-**Linting:**
-```bash
-npm run lint  # ESLint
-# Project also uses Biome (@biomejs/biome) for additional linting
-```
+## Database Management
 
-**Local Supabase:**
+The project uses Supabase with migrations in `supabase/migrations/`:
+
 ```bash
-supabase start      # Start local Supabase
-supabase db push    # Apply migrations
-supabase db reset   # Reset DB and apply all migrations
+# Link to Supabase project (one-time setup)
+supabase link --project-ref your-project-ref
+
+# Push migrations to Supabase
+supabase db push
+
+# Generate TypeScript types from database schema
+supabase gen types typescript --local > lib/types/supabase.ts
 ```
 
 ## Architecture
 
-### Core Stack
-- **Next.js 15** with App Router, React Server Components, and Turbopack
-- **React 19** with TypeScript (strict mode)
-- **Supabase** for authentication, database (PostgreSQL), and storage
-- **Google Gemini 2.5 Flash** (`gemini-2.5-flash-image-preview`) for AI image transformation
-- **Tailwind CSS** with shadcn/ui components
+### Core Concepts
 
-### Project Structure
+**Image Provenance System**: Every transformed image tracks its ancestry through `source_image_id`, `root_image_id`, `transformation_prompt`, and `generation_depth`. A database trigger automatically populates these fields on insert. Original uploads have `source_image_id = null` and `generation_depth = 0`.
 
-**App Router Layout:**
-- `/app` - Next.js 15 App Router pages and API routes
-- `/app/@modal` - Parallel route for modal overlay (intercepting routes pattern with `(.)image/[uuid]`)
-- `/app/api/*` - API route handlers (transform-image, images, likes, comments, etc.)
-- `/app/protected` - Auth-protected routes
-- `/components` - React components (including shadcn/ui in `/components/ui`)
-- `/lib` - Shared utilities and context providers
-- `/supabase` - Database migrations and config
+**Visibility Levels**: Images have three visibility states (`public`, `unlisted`, `private`) that control who can view them:
+- Public: Visible in gallery, anyone can view
+- Unlisted: Not in gallery, viewable with direct link
+- Private: Only owner can view
 
-**Key Files:**
-- `middleware.ts` - Supabase session management (runs on all routes except static assets)
-- `lib/supabase/server.ts` - Server-side Supabase client (create new instance per function)
-- `lib/supabase/client.ts` - Browser-side Supabase client
-- `lib/supabase/upload-image.ts` - Helper for uploading images with provenance tracking
-- `lib/context/image-refresh-context.tsx` - Global state for triggering image gallery refreshes
-- `lib/types/index.ts` - Centralized type definitions (database types, API responses, enums)
-- `lib/api/permissions.ts` - Permission checking utilities for image access/modification
-- `lib/api/error-handler.ts` - Standardized error responses with codes and status mapping
-- `lib/config/transformation-limits.ts` - Monthly transformation limit configuration
+**Transformation Limits**: Monthly transformation quotas prevent API cost overruns. The limit is set in `lib/config/transformation-limits.ts`. Database functions `get_current_month_counter()` and `increment_transformation_counter()` track usage atomically.
 
-### Authentication
-- Password-based auth and Google OAuth via Supabase
-- Server Components: use `createClient()` from `@/lib/supabase/server`
-- Client Components: use `createClient()` from `@/lib/supabase/client`
-- **Important:** Always create new server client instances per function (don't cache globally) for Vercel/Fluid compute compatibility
+### Key Directories
 
-### Database Schema
-Images are stored with metadata in PostgreSQL (`public.images` table) and binaries in Supabase Storage (`public-images` bucket):
+- `app/` - Next.js App Router pages and API routes
+  - `app/api/` - REST API endpoints for images, likes, comments, transformations
+  - `app/@modal/` - Parallel route for modal image views
+- `lib/` - Shared utilities and business logic
+  - `lib/types/` - TypeScript type definitions (centralized)
+  - `lib/api/` - API utilities (permissions, error handling)
+  - `lib/supabase/` - Supabase client creation (server/client/middleware)
+- `components/` - React components
+  - `components/ui/` - shadcn/ui base components
+- `supabase/migrations/` - Database schema migrations (timestamped SQL files)
 
-**Core Tables:**
-- `images` table:
-  - Basic: id (UUID), user_id, name, created_at, likes_count, comments_count
-  - Visibility: visibility (enum: 'public' | 'unlisted' | 'private')
-  - Provenance: source_image_id, transformation_prompt, root_image_id, generation_depth
-- `likes` table: id, image_id, user_id, created_at (UNIQUE constraint on image_id + user_id)
-- `comments` table: id, image_id, user_id, username, text, created_at
-- `transformation_counters` table: month_year (PK), transformation_count, created_at, updated_at
+### Critical Patterns
 
-**Row Level Security (RLS):**
-- Public images: visible to everyone
-- Unlisted images: visible to anyone with the link
-- Private images: only visible to owner
-- Users can only modify/delete their own images
+**Supabase Client Creation**: Always create a new Supabase client in each function—never cache globally. This is critical for Vercel's Fluid compute. Use:
+- `lib/supabase/server.ts` for Server Components and API routes
+- `lib/supabase/client.ts` for Client Components
+- `lib/supabase/middleware.ts` for middleware session updates
 
-**Database Triggers & Functions:**
-- `update_image_likes_count()` - Auto-updates likes_count on images table when likes added/removed
-- `update_image_comments_count()` - Auto-updates comments_count on images table when comments added/removed
-- `set_image_provenance()` - Auto-populates provenance fields (root_image_id, generation_depth) on image insert
-- `get_current_month_counter()` - Returns current month's transformation count
-- `increment_transformation_counter()` - Atomically increments transformation count for rate limiting
+**API Error Handling**: All API routes use centralized error handling from `lib/api/error-handler.ts`:
+- Wrap handlers with `withErrorHandler()` for automatic error catching
+- Use helper functions: `createErrorResponse()`, `createSuccessResponse()`, `validationError()`, `notFoundError()`, `unauthorizedError()`, `forbiddenError()`
+- All responses follow the standard format: `{ success: boolean, data?: any, error?: string, code?: string }`
 
-### API Architecture
+**Permission Checks**: Use centralized permission utilities from `lib/api/permissions.ts`:
+- `checkImageViewPermission(imageId)` - Verifies user can view based on visibility
+- `checkImageModifyPermission(imageId)` - Verifies user owns the image
+- `getAuthenticatedUser()` - Returns authenticated user or error
 
-**RESTful Endpoints:**
-- `GET /api/images` - List images (supports `?filter=mine` and `?page=N`)
-- `POST /api/images/sync` - Sync storage files to database (maintenance endpoint)
-- `GET /api/images/[id]` - Get single image with metadata and comments
-- `PATCH /api/images/[id]` - Update image (visibility, etc.)
-- `DELETE /api/images/[id]` - Delete image
-- `GET /api/images/[id]/likes` - Get like status and count for image
-- `POST /api/images/[id]/likes` - Like an image
-- `DELETE /api/images/[id]/likes` - Unlike an image
-- `GET /api/images/[id]/comments` - Get comments for image (standalone endpoint)
-- `POST /api/images/[id]/comments` - Add comment to image
-- `DELETE /api/comments/[id]` - Delete comment (by comment owner only)
-- `GET /api/images/[id]/provenance` - Get image ancestry chain (from root to current)
-- `GET /api/images/[id]/derivatives` - Get direct child/derivative images
-- `GET /api/images/[id]/tree` - Get full transformation tree (all related images)
-- `POST /api/transformations` - Transform image with AI (checks rate limit)
+**Type Definitions**: All types are centralized in `lib/types/index.ts`:
+- Database record types (e.g., `ImageRecord`, `CommentRecord`)
+- API response types (e.g., `ImageData`, `Comment`)
+- Provenance types (e.g., `ImageProvenance`, `ImageWithAncestry`)
+- Standard response envelopes (`ApiSuccessResponse<T>`, `ApiErrorResponse`)
 
-**Error Handling (lib/api/error-handler.ts):**
-- Standardized error response format: `{ error: string, code: string, details?: unknown }`
-- Error codes: BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, RATE_LIMIT, etc.
-- Helper functions: `createErrorResponse()`, `validationError()`, `notFoundError()`, `unauthorizedError()`
-- `createSuccessResponse()` for consistent success responses: `{ success: true, data: T, meta?: {} }`
+### Image Transformation Flow
 
-**Permissions (lib/api/permissions.ts):**
-- `checkImageViewPermission(imageId)` - Validates user can view image based on visibility
-- `checkImageModifyPermission(imageId)` - Validates user owns image for modifications
-- `getAuthenticatedUser()` - Returns user ID if authenticated
-- `validateVisibility(value)` - Type guard for visibility enum values
+1. User uploads image → stored in Supabase Storage `public-images` bucket
+2. User submits transformation prompt → `POST /api/transformations`
+3. API checks monthly limit via `get_current_month_counter()`
+4. If under limit, atomically increments counter via `increment_transformation_counter()`
+5. Downloads source image, converts to base64
+6. Calls Gemini 2.5 Flash with image + prompt
+7. Returns base64 transformed image to client
+8. Client uploads transformed image with `source_image_id` set
+9. Database trigger auto-populates provenance fields
 
-**Rate Limiting:**
-- Monthly transformation limit tracked in `transformation_counters` table
-- Configured in `lib/config/transformation-limits.ts` (default: 1000/month)
-- Enforced in `/api/transformations` before processing
+### Database Schema Highlights
 
-### AI Image Transformation Flow
-1. User uploads image → stored in Supabase Storage (`public-images` bucket) via `uploadImageToSupabase()`
-2. User provides text prompt → POST to `/api/transformations`
-3. Server checks monthly transformation limit (configurable in `lib/config/transformation-limits.ts`)
-4. Server fetches original image, converts to base64 (10MB max)
-5. Sends to Gemini 2.5 Flash with prompt + image
-6. Returns base64 transformed image → uploaded via `uploadImageToSupabase()` with source_image_id and transformation_prompt
-7. Database trigger `set_image_provenance()` auto-populates root_image_id and generation_depth
+**Images Table** (`public.images`):
+- Primary fields: `id`, `user_id`, `name`, `created_at`, `visibility`
+- Social: `likes_count`, `comments_count` (denormalized counts)
+- Provenance: `source_image_id`, `root_image_id`, `transformation_prompt`, `generation_depth`
+- RLS policies enforce ownership for mutations
+- Trigger `set_image_provenance()` runs before insert
 
-### Type System
+**Transformation Counters** (`public.transformation_counters`):
+- Tracks monthly transformation counts by `month_year` (format: "YYYY-MM")
+- Functions `get_current_month_counter()` and `increment_transformation_counter()` provide atomic operations
 
-**Centralized Types (lib/types/index.ts):**
-- Database types: `ImageRecord`, `CommentRecord`, `LikeRecord` (match DB schema exactly)
-- API response types: `ImageData`, `Comment` (camelCase, includes computed fields)
-- Provenance types: `ImageProvenance`, `ImageWithAncestry`, `ImageWithDescendants`
-- Enums: `VisibilityType` ('public' | 'unlisted' | 'private')
-- API envelopes: `ApiSuccessResponse<T>`, `ApiErrorResponse`, `ApiResponse<T>`
-- Type guards: `isValidVisibility()`, `isApiError()`
+## Environment Variables
 
-**Important:** Use database types for DB operations, API response types for client-facing data.
+Required variables in `.env.local`:
 
-### Parallel Routes & Modals
-- `@modal` slot for intercepting routes: clicking image on gallery opens modal overlay
-- Modal route: `app/@modal/(.)image/[uuid]/page.tsx`
-- Full page route: `app/image/[uuid]/page.tsx`
-- `app/@modal/default.tsx` renders `null` when no modal active
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=
 
-### Environment Variables
-Required in `.env.local`:
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY` - Supabase anon key
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` - Google OAuth client ID (for frontend)
-- `GEMINI_API_KEY` - Google AI Studio API key for Gemini
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth for Supabase local dev
+# Google OAuth (for client-side)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 
-Optional:
-- `NEXT_PUBLIC_GA_ID` - Google Analytics
-- `NEXT_PUBLIC_FULLSTORY_ORG` - FullStory analytics
+# Google Gemini AI
+GEMINI_API_KEY=
 
-### TypeScript Configuration
-- Path alias: `@/*` maps to project root
-- Strict mode enabled
-- Target: ES2017
+# Google OAuth (for Supabase server)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
 
-### Styling
-- Tailwind CSS with `next-themes` for dark/light mode
-- Uses `clsx` and `tailwind-merge` (via `lib/utils.ts` `cn()` helper)
-- Custom font: Geist (primary), Inter (for logo/headings)
+## Common Tasks
+
+**Adding a new API route**: Follow the pattern in `app/api/images/[id]/route.ts`:
+1. Import utilities from `lib/api/error-handler.ts` and `lib/api/permissions.ts`
+2. Wrap handler with `withErrorHandler()`
+3. Use permission check functions early in handler
+4. Return responses via `createSuccessResponse()` or error helpers
+5. Add types to `lib/types/index.ts` if needed
+
+**Adding a migration**:
+1. Create file in `supabase/migrations/` with format `YYYYMMDD_description.sql`
+2. Write migration SQL (use `IF NOT EXISTS` for idempotency)
+3. Test locally with `supabase db push`
+4. Commit migration file—production deployment will auto-apply
+
+**Modifying transformation limit**: Update `MONTHLY_TRANSFORMATION_LIMIT` in `lib/config/transformation-limits.ts`.
+
+**Adding new image metadata**: Add column to `images` table, update `ImageRecord` in `lib/types/index.ts`, update API routes to include field in responses.
+
+## Tech Stack Notes
+
+- **Next.js 15**: Uses App Router, React Server Components, and async Server Components pattern
+- **React 19**: Latest features including async transitions
+- **Supabase**: Auth, Database (Postgres), Storage (S3-compatible)
+- **Google Gemini 2.5 Flash**: Model ID `gemini-2.5-flash-image-preview` for transformations
+- **shadcn/ui**: Component library built on Radix UI primitives
+- **Biome + ESLint**: Dual linting setup for code quality
+- **Tailwind CSS**: Utility-first styling with `tailwind-merge` for class merging
+
+## Deployment
+
+The app is deployed on Vercel. On push to main:
+1. Vercel builds Next.js app
+2. Environment variables loaded from Vercel dashboard
+3. Middleware handles Supabase session refresh
+4. Serverless functions serve API routes
+
+Ensure all environment variables are set in Vercel project settings.
