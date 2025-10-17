@@ -140,9 +140,10 @@ export default function ImageTree({ imageId, currentImageId }: ImageTreeProps) {
               <Image
                 src={node.url}
                 alt={node.transformationPrompt || 'Image'}
-                fill
+                width={48}
+                height={48}
+                quality={60}
                 className="object-cover"
-                unoptimized
               />
             </div>
 
